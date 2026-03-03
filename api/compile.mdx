@@ -7,14 +7,14 @@ The Compile API compiles LaTeX source code into PDF documents using the Tectonic
 
 ## Endpoint
 
-```
+```http
 POST /api/compile
 ```
 
 ## Request parameters
 
 <ParamField body="content" type="string" required>
-  Base64-encoded LaTeX source code to compile. The content should be encoded using `Buffer.from(latexSource).toString('base64')` or equivalent.
+  LaTeX source code to compile as a plain string.
 </ParamField>
 
 ## Response
@@ -59,7 +59,7 @@ Returned when an unexpected error occurs during the compilation process.
 
 The API performs the following steps:
 
-1. **Decode content**: Decodes the base64-encoded LaTeX source
+1. **Receive content**: Accepts the LaTeX source code as a plain string
 2. **Write temporary file**: Saves the source as `input.tex` in the system temp directory
 3. **Create output directories**: Sets up `out/` and `cache/` directories for Tectonic
 4. **Run Tectonic**: Executes the Tectonic compiler with the following arguments:
@@ -83,7 +83,7 @@ The Tectonic binary location varies by platform:
 curl -X POST https://your-domain.com/api/compile \
   -H "Content-Type: application/json" \
   -d '{
-    "content": "XFxkb2N1bWVudGNsYXNze2FydGljbGV9XG5cXGJlZ2lue2RvY3VtZW50fVxuSGVsbG8sIFdvcmxkIVxuXFxlbmR7ZG9jdW1lbnR9"
+    "content": "\\documentclass{article}\n\\begin{document}\nHello, World!\n\\end{document}"
   }' \
   --output output.pdf
 ```
@@ -94,14 +94,12 @@ const latexSource = `\\documentclass{article}
 Hello, World!
 \\end{document}`;
 
-const content = Buffer.from(latexSource).toString('base64');
-
 const response = await fetch('https://your-domain.com/api/compile', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
   },
-  body: JSON.stringify({ content })
+  body: JSON.stringify({ content: latexSource })
 });
 
 if (response.ok) {
@@ -115,7 +113,6 @@ if (response.ok) {
 
 ```python Python
 import requests
-import base64
 
 latex_source = r"""
 \documentclass{article}
@@ -124,11 +121,9 @@ Hello, World!
 \end{document}
 """
 
-content = base64.b64encode(latex_source.encode()).decode()
-
 response = requests.post(
     'https://your-domain.com/api/compile',
-    json={'content': content}
+    json={'content': latex_source}
 )
 
 if response.status_code == 200:
@@ -154,6 +149,6 @@ else:
 
 - Ensure all LaTeX packages used in the document are available in Tectonic
 - Check that the LaTeX syntax is valid before sending to the API
-- The base64 encoding should be standard (not URL-safe) encoding
+- Send the LaTeX content as a plain string in the JSON body
 - Large documents may take several seconds to compile
 - The API does not support multi-file projects (use `\input` or `\include` directives within a single file)
