@@ -1,0 +1,100 @@
+{
+  "projectType": "saas",
+  "projectName": "Typeset",
+  "projectDescription": "AI-powered, collaborative online LaTeX editor for writing and compiling documents",
+  "theme": "palm",
+  "primaryColor": "#6366f1",
+  "lightColor": "#818cf8",
+  "darkColor": "#4f46e5",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "features"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "core/editor",
+              "core/ai-assistant",
+              "core/collaboration",
+              "core/compilation"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/creating-projects",
+              "guides/sharing-projects",
+              "guides/latex-basics",
+              "guides/troubleshooting"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Self-Hosting",
+        "groups": [
+          {
+            "group": "Setup",
+            "pages": [
+              "self-hosting/overview",
+              "self-hosting/installation",
+              "self-hosting/configuration",
+              "self-hosting/deployment"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "self-hosting/environment-variables",
+              "self-hosting/authentication",
+              "self-hosting/database"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Endpoints",
+            "pages": [
+              "api/overview",
+              "api/chat",
+              "api/compile",
+              "api/liveblocks-auth"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Zero-setup LaTeX editing in the browser",
+    "AI-powered code assistant with GPT and Gemini support",
+    "Real-time collaborative editing with Liveblocks",
+    "Instant PDF compilation with Tectonic",
+    "Project sharing and access control",
+    "Modern CodeMirror-based editor",
+    "Built with Next.js and TypeScript"
+  ],
+  "publicApiSurface": [
+    "POST /api/chat - AI assistant chat endpoint",
+    "POST /api/compile - LaTeX compilation endpoint",
+    "POST /api/liveblocks-auth - Real-time collaboration authentication",
+    "createProject() - Server action to create new project",
+    "deleteProject(projectId) - Server action to delete project",
+    "renameProject(projectId, newTitle) - Server action to rename project",
+    "inviteToProject(projectId, email) - Server action to invite collaborators",
+    "removeFromProject(projectId, email) - Server action to remove collaborators",
+    "leaveProject(projectId) - Server action to leave shared project"
+  ]
+}
