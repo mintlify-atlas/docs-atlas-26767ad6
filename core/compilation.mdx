@@ -1,0 +1,248 @@
+---
+title: PDF compilation
+description: Compile LaTeX to PDF instantly with the Tectonic engine
+---
+
+Typeset uses Tectonic, a modern LaTeX engine, to compile your LaTeX documents into PDF files. Compilation happens on-demand in the cloud, with results appearing in seconds.
+
+## How compilation works
+
+When you click the **Compile** button:
+
+<Steps>
+  <Step title="Document sent to server">
+    Your current LaTeX code is sent to the Typeset compilation API endpoint (`/api/compile`).
+  </Step>
+
+  <Step title="Tectonic processes the file">
+    The server runs Tectonic with your document, downloading any required LaTeX packages automatically.
+  </Step>
+
+  <Step title="PDF or error returned">
+    - **Success**: The compiled PDF is returned and displayed in the preview panel
+    - **Error**: Compilation errors are shown with details to help you debug
+  </Step>
+</Steps>
+
+<Info>
+Tectonic automatically downloads LaTeX packages from the internet as needed. You don't need to manage package installations.
+</Info>
+
+## Compiling your document
+
+### Desktop interface
+
+On desktop, the interface shows three panels:
+
+1. **Chat panel (left)** - AI assistant
+2. **Editor panel (center)** - Your LaTeX code
+3. **Preview panel (right)** - PDF output
+
+Click the **Compile** button in the top center of the navigation bar. The button shows:
+
+- **Play icon** when ready to compile
+- **Spinning loader** while compiling
+- **"Compile" label** for clarity
+
+### Mobile interface
+
+On mobile, the interface uses tabs:
+
+- **Chat tab** - AI assistant
+- **Editor tab** - Your LaTeX code  
+- **Preview tab** - PDF output
+
+The compile button appears in the center of the top navigation. After compilation succeeds, the interface automatically switches to the **Preview** tab.
+
+## Understanding the preview
+
+### Successful compilation
+
+When compilation succeeds:
+
+- The PDF renders in the preview panel
+- You can scroll through pages
+- Zoom controls let you adjust the view
+- The PDF updates each time you compile
+
+<Note>
+The preview displays the most recent compilation. Previous versions are not saved automatically.
+</Note>
+
+### Before first compilation
+
+The preview panel shows a placeholder state:
+
+- File icon
+- "Preview your document here" heading
+- "Compile to see the output PDF" message
+
+This reminds you to click the compile button to see results.
+
+## Handling compilation errors
+
+If your LaTeX code has errors, compilation fails and the preview panel shows:
+
+- **Alert box** with a red warning icon
+- **"Compilation failed" title**
+- **Error message** with details from Tectonic
+
+### Common error types
+
+<Tabs>
+  <Tab title="Syntax errors">
+    Missing braces, unclosed environments, or invalid commands.
+    
+    Example:
+    ```
+    ! Undefined control sequence.
+    l.10 \invalid
+    ```
+    
+    **Fix**: Check the line number (l.10) and correct the command.
+  </Tab>
+
+  <Tab title="Missing packages">
+    LaTeX packages that Tectonic can't find or download.
+    
+    Example:
+    ```
+    ! LaTeX Error: File 'package.sty' not found.
+    ```
+    
+    **Fix**: Check the package name spelling or use an alternative package.
+  </Tab>
+
+  <Tab title="Math errors">
+    Malformed math expressions or environments.
+    
+    Example:
+    ```
+    ! Missing $ inserted.
+    ```
+    
+    **Fix**: Ensure math expressions are properly delimited with `$` or in math environments.
+  </Tab>
+
+  <Tab title="File errors">
+    Issues with the document structure or encoding.
+    
+    Example:
+    ```
+    ! Emergency stop.
+    ```
+    
+    **Fix**: Check for special characters or encoding issues in your document.
+  </Tab>
+</Tabs>
+
+## Debugging compilation errors
+
+<Steps>
+  <Step title="Read the error message">
+    The error message includes:
+    - The type of error
+    - The line number where it occurred
+    - Context about what went wrong
+  </Step>
+
+  <Step title="Locate the problem">
+    Navigate to the line number mentioned in the error. Look at surrounding lines too—errors often appear after the actual problem.
+  </Step>
+
+  <Step title="Ask the AI">
+    Copy the error message and paste it in the chat: "I'm getting this error: [paste error]. How do I fix it?"
+  </Step>
+
+  <Step title="Fix and recompile">
+    Make the necessary changes and click **Compile** again to verify the fix.
+  </Step>
+</Steps>
+
+<Info>
+The AI assistant is trained to understand LaTeX errors and can often suggest specific fixes based on the error message.
+</Info>
+
+## Compilation performance
+
+### Typical compile times
+
+- **Simple documents** (few packages, short): 1-3 seconds
+- **Medium documents** (multiple packages, several pages): 3-7 seconds  
+- **Complex documents** (many packages, images, references): 7-15 seconds
+
+### First compile
+
+The first compilation of a document may take longer because:
+
+- Tectonic downloads required LaTeX packages
+- Package caching happens on the server
+- Subsequent compiles reuse cached packages and are faster
+
+<Note>
+If compilation takes longer than expected, check your internet connection. Slow connections can delay package downloads.
+</Note>
+
+## Advanced features
+
+### Automatic package management
+
+Tectonic automatically:
+
+- Detects `\usepackage{}` commands in your document
+- Downloads packages from the internet as needed
+- Caches packages for future compilations
+- Handles package dependencies
+
+You never need to manually install LaTeX packages.
+
+### Server-side execution
+
+Compilation happens on Typeset's servers:
+
+- **No local setup** - Works on any device with a browser
+- **Consistent environment** - Same LaTeX version for all users
+- **Resource efficient** - Doesn't use your computer's processing power
+- **Secure** - Your document is processed in an isolated environment
+
+## Limitations
+
+### Unsupported features
+
+Tectonic doesn't support some advanced LaTeX features:
+
+- **Shell escape** - Commands that run shell scripts (`\write18`)
+- **External tools** - Integration with tools like BibTeX is limited
+- **Custom fonts** - Some font packages may not work
+
+<Note>
+If you need features Tectonic doesn't support, consider exporting your document and compiling locally with pdfLaTeX or XeLaTeX.
+</Note>
+
+### File size limits
+
+Very large documents may:
+
+- Take longer to compile
+- Timeout if compilation exceeds 30 seconds
+- Produce large PDFs that load slowly
+
+## Best practices
+
+<Steps>
+  <Step title="Compile frequently">
+    Compile after significant changes to catch errors early. Don't wait until your document is complete.
+  </Step>
+
+  <Step title="Start simple">
+    Begin with a minimal document and add packages gradually. This helps identify which package causes problems if compilation fails.
+  </Step>
+
+  <Step title="Check line numbers">
+    Error messages include line numbers. Use them to quickly locate issues rather than searching manually.
+  </Step>
+
+  <Step title="Use the AI">
+    When stuck on an error, ask the AI assistant. It can explain error messages and suggest fixes.
+  </Step>
+</Steps>

@@ -1,0 +1,159 @@
+---
+title: Compile API
+description: Compile LaTeX source code to PDF using the Tectonic engine
+---
+
+The Compile API compiles LaTeX source code into PDF documents using the Tectonic typesetting engine. It handles the complete compilation pipeline including temporary file management and error reporting.
+
+## Endpoint
+
+```
+POST /api/compile
+```
+
+## Request parameters
+
+<ParamField body="content" type="string" required>
+  Base64-encoded LaTeX source code to compile. The content should be encoded using `Buffer.from(latexSource).toString('base64')` or equivalent.
+</ParamField>
+
+## Response
+
+On successful compilation, returns a PDF file with the following headers:
+
+<ResponseField name="Content-Type" type="string">
+  `application/pdf`
+</ResponseField>
+
+<ResponseField name="Content-Disposition" type="string">
+  `inline; filename="output.pdf"`
+</ResponseField>
+
+## Error responses
+
+### Compilation error (400)
+
+Returned when the LaTeX source contains syntax errors or cannot be compiled.
+
+<ResponseField name="error" type="boolean">
+  Always `true` for error responses
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Error message from the Tectonic compiler, including line numbers and error descriptions. If no specific error message is available, returns "Unknown compilation error".
+</ResponseField>
+
+### Internal error (500)
+
+Returned when an unexpected error occurs during the compilation process.
+
+<ResponseField name="error" type="boolean">
+  Always `true` for error responses
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Error message describing the internal failure. Returns "Unknown error" if the error object has no message.
+</ResponseField>
+
+## Compilation process
+
+The API performs the following steps:
+
+1. **Decode content**: Decodes the base64-encoded LaTeX source
+2. **Write temporary file**: Saves the source as `input.tex` in the system temp directory
+3. **Create output directories**: Sets up `out/` and `cache/` directories for Tectonic
+4. **Run Tectonic**: Executes the Tectonic compiler with the following arguments:
+   - `-X compile` - Use experimental compile mode
+   - `--outdir` - Output directory for generated PDF
+   - `--synctex=false` - Disable SyncTeX generation
+5. **Return PDF or error**: Returns the compiled PDF or error messages from stderr
+
+## Platform-specific behavior
+
+The Tectonic binary location varies by platform:
+
+- **Linux/Windows**: `bin/tectonic` relative to the project root
+- **macOS**: `/usr/local/bin/tectonic`
+
+## Example request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://your-domain.com/api/compile \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "XFxkb2N1bWVudGNsYXNze2FydGljbGV9XG5cXGJlZ2lue2RvY3VtZW50fVxuSGVsbG8sIFdvcmxkIVxuXFxlbmR7ZG9jdW1lbnR9"
+  }' \
+  --output output.pdf
+```
+
+```javascript JavaScript
+const latexSource = `\\documentclass{article}
+\\begin{document}
+Hello, World!
+\\end{document}`;
+
+const content = Buffer.from(latexSource).toString('base64');
+
+const response = await fetch('https://your-domain.com/api/compile', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({ content })
+});
+
+if (response.ok) {
+  const pdfBlob = await response.blob();
+  // Handle PDF blob
+} else {
+  const error = await response.json();
+  console.error(error.message);
+}
+```
+
+```python Python
+import requests
+import base64
+
+latex_source = r"""
+\documentclass{article}
+\begin{document}
+Hello, World!
+\end{document}
+"""
+
+content = base64.b64encode(latex_source.encode()).decode()
+
+response = requests.post(
+    'https://your-domain.com/api/compile',
+    json={'content': content}
+)
+
+if response.status_code == 200:
+    with open('output.pdf', 'wb') as f:
+        f.write(response.content)
+else:
+    error = response.json()
+    print(f"Error: {error['message']}")
+```
+
+</CodeGroup>
+
+## Example error response
+
+```json
+{
+  "error": true,
+  "message": "error: LaTeX Error: File `nonexistent.sty' not found.\n\nType X to quit or <RETURN> to proceed,\nor enter new name. (Default extension: sty)\n"
+}
+```
+
+## Tips for successful compilation
+
+- Ensure all LaTeX packages used in the document are available in Tectonic
+- Check that the LaTeX syntax is valid before sending to the API
+- The base64 encoding should be standard (not URL-safe) encoding
+- Large documents may take several seconds to compile
+- The API does not support multi-file projects (use `\input` or `\include` directives within a single file)

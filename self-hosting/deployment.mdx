@@ -1,0 +1,629 @@
+---
+title: Deployment
+description: Deploy Typeset to Vercel or other platforms for production use
+---
+
+## Deployment options
+
+Typeset can be deployed to any platform that supports Next.js applications:
+
+- **Vercel** (recommended) - Zero-config deployment with automatic scaling
+- **Docker** - Containerized deployment for any cloud provider
+- **Node.js server** - Traditional server deployment
+- **AWS, GCP, Azure** - Cloud platform deployments
+
+This guide covers Vercel (recommended) and Docker deployments.
+
+## Deploy to Vercel
+
+Vercel is the recommended deployment platform for Typeset. It provides:
+
+- Automatic HTTPS certificates
+- Global CDN for static assets
+- Serverless API routes with auto-scaling
+- Zero-config deployment
+- Built-in analytics and monitoring
+
+<Steps>
+  <Step title="Install Vercel CLI">
+    ```bash
+    npm install -g vercel
+    ```
+    
+    Or use the included dependency:
+    ```bash
+    pnpm vercel
+    ```
+  </Step>
+
+  <Step title="Login to Vercel">
+    ```bash
+    vercel login
+    ```
+    
+    Follow the prompts to authenticate with your Vercel account.
+  </Step>
+
+  <Step title="Deploy">
+    From your project directory:
+    
+    ```bash
+    vercel
+    ```
+    
+    This will:
+    1. Build your Next.js application
+    2. Upload the build to Vercel
+    3. Provide a preview URL
+    
+    For production deployment:
+    ```bash
+    vercel --prod
+    ```
+  </Step>
+
+  <Step title="Configure environment variables">
+    Add environment variables in the Vercel dashboard:
+    
+    1. Go to your project settings
+    2. Navigate to **Environment Variables**
+    3. Add each variable:
+    
+    ```bash
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...
+    CLERK_SECRET_KEY=sk_live_...
+    LIVEBLOCKS_SECRET_KEY=sk_...
+    NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY=pk_...
+    OPENAI_API_KEY=sk-proj-...
+    GOOGLE_API_KEY=AIza...
+    ```
+    
+    <Warning>
+      Use production API keys (not test keys) for your production deployment.
+    </Warning>
+  </Step>
+
+  <Step title="Configure custom domain">
+    In the Vercel dashboard:
+    
+    1. Go to **Settings → Domains**
+    2. Add your custom domain
+    3. Configure DNS records as instructed
+    4. Wait for SSL certificate provisioning (automatic)
+  </Step>
+</Steps>
+
+### Vercel deployment via GitHub
+
+For continuous deployment:
+
+<Steps>
+  <Step title="Push to GitHub">
+    Push your Typeset repository to GitHub:
+    
+    ```bash
+    git remote add origin https://github.com/yourusername/typeset.git
+    git push -u origin main
+    ```
+  </Step>
+
+  <Step title="Import to Vercel">
+    1. Go to [vercel.com/new](https://vercel.com/new)
+    2. Click **Import Git Repository**
+    3. Select your repository
+    4. Configure project settings (automatic for Next.js)
+    5. Add environment variables
+    6. Click **Deploy**
+  </Step>
+
+  <Step title="Automatic deployments">
+    Vercel will automatically deploy:
+    - **Production**: Commits to `main` branch
+    - **Preview**: Commits to other branches and pull requests
+  </Step>
+</Steps>
+
+### Vercel configuration
+
+Create `vercel.json` in your project root for advanced configuration:
+
+```json vercel.json
+{
+  "buildCommand": "pnpm build",
+  "devCommand": "pnpm dev",
+  "installCommand": "pnpm install",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "env": {
+    "NEXT_PUBLIC_APP_URL": "https://your-domain.com"
+  }
+}
+```
+
+**Configuration options:**
+
+- `regions` - Deployment regions (e.g., `iad1` for US East)
+- `buildCommand` - Custom build command
+- `installCommand` - Custom package installation
+- `functions` - Serverless function configuration
+
+### Tectonic binary on Vercel
+
+<Warning>
+  Vercel's serverless functions have a 50 MB deployment size limit. The Tectonic binary (~35 MB) fits within this limit.
+</Warning>
+
+The Tectonic binary must be included in your deployment:
+
+1. Ensure `bin/tectonic` is committed to your repository
+2. Verify the binary is executable:
+   ```bash
+   chmod +x bin/tectonic
+   git add bin/tectonic
+   git commit -m "Add Tectonic binary"
+   ```
+3. The binary will be included in the deployment automatically
+
+**Vercel limits:**
+
+- Max deployment size: 50 MB (Typeset with Tectonic: ~40 MB)
+- Max function size: 50 MB
+- `/tmp` storage: 512 MB (for LaTeX package cache)
+- Function timeout: 10 seconds (Hobby), 60 seconds (Pro), 900 seconds (Enterprise)
+
+<Note>
+  LaTeX compilation may timeout on Vercel Hobby plan (10 seconds). Upgrade to Pro for 60-second function execution.
+</Note>
+
+## Deploy with Docker
+
+Deploy Typeset as a containerized application:
+
+<Steps>
+  <Step title="Create Dockerfile">
+    Create `Dockerfile` in your project root:
+    
+    ```dockerfile Dockerfile
+    FROM node:20-alpine AS base
+    
+    # Install dependencies only when needed
+    FROM base AS deps
+    RUN apk add --no-cache libc6-compat
+    WORKDIR /app
+    
+    # Install pnpm
+    RUN npm install -g pnpm
+    
+    # Copy package files
+    COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+    RUN pnpm install --frozen-lockfile
+    
+    # Builder stage
+    FROM base AS builder
+    WORKDIR /app
+    COPY --from=deps /app/node_modules ./node_modules
+    COPY . .
+    
+    # Build Next.js application
+    RUN npm install -g pnpm && pnpm build
+    
+    # Production stage
+    FROM base AS runner
+    WORKDIR /app
+    
+    ENV NODE_ENV=production
+    
+    RUN addgroup --system --gid 1001 nodejs
+    RUN adduser --system --uid 1001 nextjs
+    
+    # Copy built application
+    COPY --from=builder /app/public ./public
+    COPY --from=builder /app/.next/standalone ./
+    COPY --from=builder /app/.next/static ./.next/static
+    COPY --from=builder /app/bin ./bin
+    
+    # Ensure Tectonic is executable
+    RUN chmod +x ./bin/tectonic
+    
+    USER nextjs
+    
+    EXPOSE 3000
+    
+    ENV PORT=3000
+    ENV HOSTNAME="0.0.0.0"
+    
+    CMD ["node", "server.js"]
+    ```
+  </Step>
+
+  <Step title="Update next.config.ts">
+    Enable standalone output for Docker:
+    
+    ```typescript next.config.ts
+    const nextConfig: NextConfig = {
+      output: 'standalone',
+      pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
+      // ... rest of config
+    };
+    ```
+  </Step>
+
+  <Step title="Create .dockerignore">
+    ```plaintext .dockerignore
+    node_modules
+    .next
+    .git
+    .env.local
+    .vercel
+    npm-debug.log
+    yarn-error.log
+    pnpm-debug.log
+    ```
+  </Step>
+
+  <Step title="Build Docker image">
+    ```bash
+    docker build -t typeset .
+    ```
+  </Step>
+
+  <Step title="Run container">
+    ```bash
+    docker run -p 3000:3000 \
+      -e NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_... \
+      -e CLERK_SECRET_KEY=sk_live_... \
+      -e LIVEBLOCKS_SECRET_KEY=sk_... \
+      -e NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY=pk_... \
+      -e OPENAI_API_KEY=sk-proj-... \
+      typeset
+    ```
+    
+    Or use an environment file:
+    ```bash
+    docker run -p 3000:3000 --env-file .env.production typeset
+    ```
+  </Step>
+</Steps>
+
+### Docker Compose
+
+For easier container management:
+
+```yaml docker-compose.yml
+version: '3.8'
+
+services:
+  typeset:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    restart: unless-stopped
+    volumes:
+      - /tmp/tectonic-cache:/tmp/cache
+    environment:
+      - NODE_ENV=production
+```
+
+Run with:
+
+```bash
+docker-compose up -d
+```
+
+### Deploy Docker to cloud platforms
+
+<CodeGroup>
+
+```bash AWS ECS
+# Push to Amazon ECR
+aws ecr get-login-password --region us-east-1 | \
+  docker login --username AWS --password-stdin <account>.dkr.ecr.us-east-1.amazonaws.com
+
+docker tag typeset:latest <account>.dkr.ecr.us-east-1.amazonaws.com/typeset:latest
+docker push <account>.dkr.ecr.us-east-1.amazonaws.com/typeset:latest
+
+# Deploy to ECS (configure task definition with environment variables)
+```
+
+```bash Google Cloud Run
+# Push to Google Container Registry
+gcloud builds submit --tag gcr.io/<project-id>/typeset
+
+# Deploy to Cloud Run
+gcloud run deploy typeset \
+  --image gcr.io/<project-id>/typeset \
+  --platform managed \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --set-env-vars="NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_..."
+```
+
+```bash Azure Container Instances
+# Push to Azure Container Registry
+az acr build --registry <registry-name> --image typeset .
+
+# Deploy to ACI
+az container create \
+  --resource-group <resource-group> \
+  --name typeset \
+  --image <registry-name>.azurecr.io/typeset:latest \
+  --dns-name-label typeset \
+  --ports 3000 \
+  --environment-variables NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...
+```
+
+</CodeGroup>
+
+## Deploy to traditional Node.js server
+
+For deployment on a VPS or dedicated server:
+
+<Steps>
+  <Step title="Build the application">
+    ```bash
+    pnpm build
+    ```
+  </Step>
+
+  <Step title="Copy files to server">
+    Transfer these files to your server:
+    - `.next/` - Built application
+    - `public/` - Static assets
+    - `bin/` - Tectonic binary
+    - `package.json` - Dependencies
+    - `node_modules/` - Or run `pnpm install --prod` on server
+  </Step>
+
+  <Step title="Set environment variables">
+    Create `/etc/typeset/.env.production`:
+    
+    ```bash
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...
+    CLERK_SECRET_KEY=sk_live_...
+    LIVEBLOCKS_SECRET_KEY=sk_...
+    NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY=pk_...
+    OPENAI_API_KEY=sk-proj-...
+    ```
+  </Step>
+
+  <Step title="Create systemd service">
+    Create `/etc/systemd/system/typeset.service`:
+    
+    ```ini
+    [Unit]
+    Description=Typeset LaTeX Editor
+    After=network.target
+    
+    [Service]
+    Type=simple
+    User=typeset
+    WorkingDirectory=/var/www/typeset
+    EnvironmentFile=/etc/typeset/.env.production
+    ExecStart=/usr/bin/node /var/www/typeset/.next/standalone/server.js
+    Restart=always
+    
+    [Install]
+    WantedBy=multi-user.target
+    ```
+    
+    Enable and start:
+    ```bash
+    sudo systemctl enable typeset
+    sudo systemctl start typeset
+    ```
+  </Step>
+
+  <Step title="Configure Nginx reverse proxy">
+    Create `/etc/nginx/sites-available/typeset`:
+    
+    ```nginx
+    server {
+        listen 80;
+        server_name your-domain.com;
+        
+        # Redirect to HTTPS
+        return 301 https://$host$request_uri;
+    }
+    
+    server {
+        listen 443 ssl http2;
+        server_name your-domain.com;
+        
+        ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
+        
+        location / {
+            proxy_pass http://localhost:3000;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_cache_bypass $http_upgrade;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        
+        # WebSocket support for Liveblocks
+        location /_liveblocks/ {
+            proxy_pass http://localhost:3000;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
+            proxy_set_header Host $host;
+        }
+    }
+    ```
+    
+    Enable the site:
+    ```bash
+    sudo ln -s /etc/nginx/sites-available/typeset /etc/nginx/sites-enabled/
+    sudo nginx -t
+    sudo systemctl reload nginx
+    ```
+  </Step>
+</Steps>
+
+## Production checklist
+
+Before going live, verify:
+
+<Steps>
+  <Step title="Security">
+    - [ ] HTTPS enabled with valid SSL certificate
+    - [ ] Environment variables are secured (not in source control)
+    - [ ] Production API keys configured (not test keys)
+    - [ ] Clerk webhook signing secrets configured
+    - [ ] CORS properly configured if using separate API domain
+  </Step>
+
+  <Step title="Performance">
+    - [ ] Next.js production build completed successfully
+    - [ ] Static assets served from CDN
+    - [ ] Tectonic binary is executable and cached
+    - [ ] LaTeX package cache directory has sufficient space
+    - [ ] Database connection pooling configured (if applicable)
+  </Step>
+
+  <Step title="Monitoring">
+    - [ ] Error tracking configured (e.g., Sentry)
+    - [ ] Log aggregation set up
+    - [ ] Uptime monitoring enabled
+    - [ ] API usage monitoring for third-party services
+    - [ ] Disk space alerts for LaTeX cache
+  </Step>
+
+  <Step title="Testing">
+    - [ ] Authentication flow works end-to-end
+    - [ ] LaTeX compilation succeeds
+    - [ ] Real-time collaboration works
+    - [ ] AI assistant responds correctly
+    - [ ] PDF rendering works in all browsers
+    - [ ] Mobile responsiveness verified
+  </Step>
+</Steps>
+
+## Scaling considerations
+
+### Horizontal scaling
+
+For high-traffic deployments:
+
+**Vercel**
+
+Vercel automatically scales serverless functions. No additional configuration needed.
+
+**Docker/Kubernetes**
+
+Scale horizontally with multiple containers:
+
+```yaml
+# Kubernetes deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: typeset
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: typeset
+  template:
+    metadata:
+      labels:
+        app: typeset
+    spec:
+      containers:
+      - name: typeset
+        image: typeset:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: CLERK_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: typeset-secrets
+              key: clerk-secret
+```
+
+### Performance optimization
+
+**LaTeX package caching**
+
+Share Tectonic cache across instances:
+
+```bash
+# Mount shared volume for cache
+docker run -v /mnt/shared-cache:/tmp/cache typeset
+```
+
+**Static asset CDN**
+
+Configure CDN for `public/` and `.next/static/`:
+
+```typescript next.config.ts
+const nextConfig: NextConfig = {
+  assetPrefix: process.env.CDN_URL || '',
+  // ...
+};
+```
+
+**Database optimization**
+
+If using a database (Neon, Supabase, etc.):
+- Use connection pooling
+- Enable read replicas for queries
+- Implement caching with Redis
+
+## Troubleshooting
+
+### Build fails on Vercel
+
+1. Check build logs in Vercel dashboard
+2. Verify all dependencies are in `package.json`
+3. Ensure Node.js version matches (20.x)
+4. Check for TypeScript errors: `pnpm tsc --noEmit`
+
+### Function timeout errors
+
+1. Upgrade to Vercel Pro for longer function execution
+2. Optimize LaTeX compilation (remove unnecessary packages)
+3. Implement compilation caching
+4. Pre-warm Tectonic cache with common packages
+
+### Tectonic binary not found
+
+1. Verify binary exists in `bin/tectonic`
+2. Check file permissions: `chmod +x bin/tectonic`
+3. Ensure binary is committed to Git
+4. Verify platform matches (Linux x86_64)
+
+### Collaboration not working
+
+1. Check Liveblocks API key is correct
+2. Verify WebSocket connections are allowed (check firewall)
+3. Test `/api/liveblocks-auth` endpoint
+4. Check browser console for errors
+
+### High memory usage
+
+1. Monitor LaTeX package cache size
+2. Implement cache cleanup for old packages
+3. Limit concurrent compilations
+4. Use Vercel Pro for larger memory limits
+
+## Next steps
+
+After deployment:
+
+1. Monitor application performance and errors
+2. Set up automated backups (if using database)
+3. Configure CI/CD for automatic deployments
+4. Implement rate limiting for API routes
+5. Set up staging environment for testing
+
+<Note>
+  Join the Typeset community for deployment support and best practices.
+</Note>

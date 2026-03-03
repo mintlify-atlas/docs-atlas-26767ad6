@@ -1,0 +1,239 @@
+---
+title: Authentication
+description: Set up Clerk authentication for your self-hosted Typeset instance
+---
+
+Typeset uses [Clerk](https://clerk.com) for user authentication, providing secure sign-in, user management, and session handling.
+
+## Prerequisites
+
+- A Clerk account (sign up at [clerk.com](https://clerk.com))
+- A Clerk application created for your Typeset instance
+
+## Creating a Clerk application
+
+1. Sign in to your [Clerk dashboard](https://dashboard.clerk.com)
+2. Click **Create application**
+3. Choose a name for your application (e.g., "Typeset Self-Hosted")
+4. Select the authentication methods you want to enable:
+   - Email and password
+   - Social sign-in (Google, GitHub, etc.)
+   - Phone number
+5. Click **Create application**
+
+## Obtaining API keys
+
+After creating your application:
+
+1. Navigate to **API Keys** in the sidebar
+2. Copy your **Publishable key** and **Secret key**
+3. Add them to your `.env.local` file:
+
+```bash
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+```
+
+<Warning>
+  Keep your secret key secure. Never expose it in client-side code or commit it to version control.
+</Warning>
+
+## How authentication works
+
+Typeset's authentication flow is implemented using Clerk's Next.js SDK:
+
+### Application wrapper
+
+The root layout wraps the entire application with `ClerkProvider`:
+
+```tsx title="app/layout.tsx"
+import { ClerkProvider } from "@clerk/nextjs";
+
+export default function RootLayout({ children }) {
+  return (
+    <ClerkProvider>
+      <html lang="en">
+        <body>{children}</body>
+      </html>
+    </ClerkProvider>
+  );
+}
+```
+
+See the implementation in `app/layout.tsx:32`.
+
+### Protected routes
+
+Typeset uses middleware to protect specific routes that require authentication:
+
+```tsx title="middleware.ts"
+const isProtectedRoute = createRouteMatcher([
+  "/my-projects",
+  "/shared-with-me",
+  "/project(.*)",
+]);
+
+export default clerkMiddleware(async (auth, req) => {
+  if (isProtectedRoute(req)) {
+    await auth.protect();
+  }
+});
+```
+
+See `middleware.ts:3-12` for the complete implementation.
+
+### Route protection behavior
+
+The middleware is configured to only run on specific routes:
+
+- `/my-projects` - User's project list
+- `/shared-with-me` - Projects shared with the user  
+- `/project/*` - Individual project pages
+- `/api/*` - All API routes
+
+Public marketing pages (`/`, `/home`, `/privacy`, `/terms`) are **not** matched by the middleware, so they load instantly without any Clerk initialization.
+
+<Note>
+  This selective middleware approach ensures fast loading times for public pages while protecting authenticated routes.
+</Note>
+
+## Integration with Liveblocks
+
+Clerk authentication is used to identify users for Liveblocks collaboration:
+
+```tsx title="app/api/liveblocks-auth/route.ts"
+import { currentUser } from "@clerk/nextjs/server";
+
+export async function POST() {
+  const user = await currentUser();
+  
+  if (!user) {
+    return new Response("User not found", { status: 404 });
+  }
+  
+  // Create Liveblocks session with Clerk user info
+  const { status, body } = await liveblocks.identifyUser(
+    user.primaryEmailAddress.emailAddress,
+    {
+      userInfo: {
+        name: user.fullName || "Unnamed User",
+        imageUrl: user.imageUrl,
+        color: generateRandomColor(),
+      },
+    }
+  );
+  
+  return new Response(body, { status });
+}
+```
+
+See `app/api/liveblocks-auth/route.ts:27-50` for the full implementation.
+
+## Configuring authentication methods
+
+In your Clerk dashboard, you can customize:
+
+### Email and password
+
+1. Go to **User & Authentication > Email, Phone, Username**
+2. Enable **Email address**
+3. Configure password requirements
+
+### Social sign-in
+
+1. Go to **User & Authentication > Social Connections**
+2. Enable providers (Google, GitHub, Microsoft, etc.)
+3. Follow provider-specific setup instructions
+
+### Multi-factor authentication
+
+1. Go to **User & Authentication > Multi-factor**
+2. Enable SMS or authenticator app MFA
+3. Configure whether MFA is optional or required
+
+## Customizing the user interface
+
+Typeset uses Clerk's pre-built components. You can customize the appearance:
+
+1. Go to **Customization > Theme** in your Clerk dashboard
+2. Adjust colors, fonts, and layout to match your branding
+3. Use the dark theme option to match Typeset's design
+
+<Note>
+  Typeset includes `@clerk/themes` package which provides pre-built theme options. You can apply these in the `ClerkProvider` component.
+</Note>
+
+## User profile management
+
+Clerk automatically provides user profile management pages. Users can:
+
+- Update their profile information
+- Change their password
+- Manage connected accounts
+- Configure MFA settings
+- View active sessions
+
+These are accessible through Clerk's built-in UI components.
+
+## Testing authentication
+
+After configuration:
+
+1. Start your development server: `npm run dev`
+2. Navigate to `/my-projects` - you should be redirected to sign in
+3. Create a test account or sign in
+4. Verify you can access protected routes
+5. Check that user information displays correctly
+
+## Production considerations
+
+<Warning>
+  Before deploying to production:
+  
+  - Switch from test keys to production keys in Clerk dashboard
+  - Configure allowed redirect URLs for your production domain
+  - Set up proper CORS settings for your domain
+  - Enable production mode in Clerk settings
+</Warning>
+
+### Allowed redirect URLs
+
+In your Clerk dashboard under **Paths**:
+
+1. Add your production domain to **Authorized redirect URLs**
+2. Add sign-in and sign-up redirect paths:
+   - `https://yourdomain.com/my-projects`
+   - `https://yourdomain.com/project/*`
+
+### Session management
+
+Configure session lifetime in **Sessions** settings:
+
+- **Session duration**: How long users stay signed in
+- **Inactivity timeout**: Auto sign-out after inactivity
+- **Multi-session handling**: Allow multiple simultaneous sessions
+
+## Troubleshooting
+
+### Users not redirecting after sign-in
+
+Check that your redirect URLs are properly configured in Clerk dashboard and match your application routes.
+
+### API key errors
+
+Ensure your `.env.local` keys match the environment (development/production) you're running in.
+
+### CORS errors
+
+Verify your domain is added to allowed origins in Clerk dashboard under **API Keys > CORS**.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Database configuration" icon="database" href="/self-hosting/database">
+    Set up Liveblocks for real-time collaboration
+  </Card>
+  <Card title="Environment variables" icon="code" href="/self-hosting/environment-variables">
+    Review all required configuration variables
+  </Card>
+</CardGroup>

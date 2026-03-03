@@ -1,0 +1,394 @@
+---
+title: Troubleshooting common issues
+description: Solutions to common problems with compilation errors, authentication, and collaboration in Typeset
+---
+
+This guide helps you resolve common issues you might encounter while using Typeset, from LaTeX compilation errors to authentication and collaboration problems.
+
+## Compilation errors
+
+When your LaTeX document fails to compile, Typeset displays error messages in the preview panel.
+
+### Understanding error messages
+
+Compilation errors from Tectonic (Typeset's LaTeX engine) typically include:
+
+- **Line number**: Where the error occurred
+- **Error type**: The kind of problem detected
+- **Context**: Surrounding code that caused the issue
+
+<Note>
+  Error messages appear in the preview panel as an alert with details about what went wrong.
+</Note>
+
+### Common LaTeX errors
+
+<AccordionGroup>
+  <Accordion title="Missing $ inserted">
+    **Cause**: Math symbols or commands used outside math mode.
+    
+    **Solution**: Wrap math content in `$...$` for inline or `\[...\]` for display math.
+    
+    ```latex
+    % Wrong
+    The answer is x^2.
+    
+    % Correct
+    The answer is $x^2$.
+    ```
+  </Accordion>
+  
+  <Accordion title="Undefined control sequence">
+    **Cause**: Using a command that doesn't exist or requires a package.
+    
+    **Solution**: Check spelling or add the required package to the preamble.
+    
+    ```latex
+    % If using \mathbb{R}
+    \usepackage{amsfonts}  % Add to preamble
+    
+    % If using \includegraphics
+    \usepackage{graphicx}  % Add to preamble
+    ```
+  </Accordion>
+  
+  <Accordion title="Missing \begin{document}">
+    **Cause**: Content appears before `\begin{document}`.
+    
+    **Solution**: Ensure all content (except package imports and settings) is after `\begin{document}`.
+    
+    ```latex
+    \documentclass{article}
+    \title{My Document}
+    \author{Name}
+    
+    \begin{document}  % This must come before content
+    
+    Your text here.
+    
+    \end{document}
+    ```
+  </Accordion>
+  
+  <Accordion title="Mismatched braces or environments">
+    **Cause**: Opening `{` without closing `}` or `\begin{...}` without `\end{...}`.
+    
+    **Solution**: Check that all braces and environments are properly matched.
+    
+    ```latex
+    % Wrong
+    \begin{itemize}
+      \item First
+    \end{enumerate}  % Mismatched!
+    
+    % Correct
+    \begin{itemize}
+      \item First
+    \end{itemize}
+    ```
+  </Accordion>
+  
+  <Accordion title="Runaway argument">
+    **Cause**: Missing closing brace or delimiter in a command argument.
+    
+    **Solution**: Ensure all command arguments are properly enclosed.
+    
+    ```latex
+    % Wrong
+    \textbf{Bold text
+    
+    % Correct
+    \textbf{Bold text}
+    ```
+  </Accordion>
+  
+  <Accordion title="Package not found">
+    **Cause**: Attempting to use a package that isn't available.
+    
+    **Solution**: Tectonic automatically downloads most packages. If a package isn't available, try an alternative or remove the `\usepackage` line.
+    
+    <Note>
+      Typeset uses Tectonic, which has excellent package support but may not include every obscure package.
+    </Note>
+  </Accordion>
+</AccordionGroup>
+
+### Debugging compilation errors
+
+<Steps>
+  <Step title="Read the error message">
+    Check the alert in the preview panel for the specific error and line number.
+  </Step>
+  
+  <Step title="Locate the problem">
+    Navigate to the line number mentioned in the error message.
+  </Step>
+  
+  <Step title="Check common issues">
+    Look for:
+    - Unmatched braces `{` `}`
+    - Missing `$` around math
+    - Typos in command names
+    - Missing packages
+  </Step>
+  
+  <Step title="Fix and recompile">
+    Make corrections and click "Compile" again to test.
+  </Step>
+  
+  <Step title="Use the AI assistant">
+    If stuck, ask the AI chat: "Why is my LaTeX code failing to compile?" and paste the error message.
+  </Step>
+</Steps>
+
+<Tip>
+  Compile frequently while writing to catch errors early. It's easier to fix one error than many at once.
+</Tip>
+
+## Authentication issues
+
+Typeset uses Clerk for authentication. Protected routes require you to be logged in.
+
+### Can't access projects
+
+**Symptoms**: Redirected to login page when trying to access `/my-projects`, `/shared-with-me`, or `/project/...`.
+
+**Solution**:
+
+<Steps>
+  <Step title="Verify you're logged in">
+    Check if your user avatar appears in the top-right corner.
+  </Step>
+  
+  <Step title="Sign in if needed">
+    Click the sign-in button and authenticate with your account.
+  </Step>
+  
+  <Step title="Check email verification">
+    Ensure your email address is verified in your Clerk account settings.
+  </Step>
+  
+  <Step title="Clear browser cache">
+    If issues persist, clear your browser cache and cookies for Typeset.
+  </Step>
+</Steps>
+
+### Email verification issues
+
+<Warning>
+  Your email must be verified to access projects. Check your inbox for a verification email from Clerk.
+</Warning>
+
+**Steps to verify**:
+
+1. Check your email inbox and spam folder
+2. Click the verification link in the email
+3. Refresh the Typeset page
+4. Try accessing your projects again
+
+### Session expired
+
+**Cause**: Your authentication session has timed out.
+
+**Solution**: Simply refresh the page and sign in again. Your work is automatically saved, so you won't lose any changes.
+
+## Collaboration problems
+
+### Invited user can't see the project
+
+**Cause**: Email mismatch or account not created.
+
+**Solution**:
+
+<Steps>
+  <Step title="Confirm the email address">
+    Verify you invited the correct email address.
+  </Step>
+  
+  <Step title="User must sign up">
+    The invited person must create a Typeset account using the exact email address you invited.
+  </Step>
+  
+  <Step title="Check Shared With Me">
+    After signing up, the user should check their "Shared With Me" page.
+  </Step>
+  
+  <Step title="Refresh the page">
+    Sometimes a browser refresh is needed to see newly shared projects.
+  </Step>
+</Steps>
+
+<Note>
+  The email address used to sign up must exactly match the email address used in the invitation.
+</Note>
+
+### Changes not syncing in real-time
+
+**Cause**: Connection issues with Liveblocks.
+
+**Solution**:
+
+1. **Check your internet connection**: Ensure you have a stable connection
+2. **Refresh the page**: This reconnects to the collaboration server
+3. **Check browser console**: Look for WebSocket connection errors (press F12)
+4. **Disable browser extensions**: Some extensions interfere with WebSocket connections
+
+<Accordion title="What is Liveblocks?">
+  Liveblocks is the real-time collaboration infrastructure that powers Typeset's collaborative editing. It handles presence, cursors, and document synchronization.
+</Accordion>
+
+### Can't remove a collaborator
+
+**Cause**: Only the project owner can remove collaborators.
+
+**Solution**: If you're not the project owner, ask the person who created the project to remove the collaborator. The owner's email is listed in the project metadata.
+
+### Someone edited my work accidentally
+
+**Cause**: All collaborators have write access.
+
+**Solution**:
+
+- **Communication**: Use the chat panel to coordinate who's editing what
+- **Real-time awareness**: Watch for other users' cursors to see where they're working
+- **Version history**: Unfortunately, Typeset doesn't currently have built-in version control
+
+<Tip>
+  Consider using comments in your LaTeX source to mark sections and coordinate work:
+  
+  ```latex
+  % Section 1 - Alice working here
+  \section{Introduction}
+  ...
+  
+  % Section 2 - Bob working here  
+  \section{Methods}
+  ...
+  ```
+</Tip>
+
+## Performance issues
+
+### Slow compilation
+
+**Cause**: Complex documents or first-time package downloads.
+
+**Solution**:
+
+- **First compilation**: Tectonic downloads required packages on first use, which takes time
+- **Subsequent compilations**: Should be much faster
+- **Large documents**: Documents with many figures or complex math take longer
+- **Be patient**: Wait for the compilation spinner to finish
+
+### Editor lagging
+
+**Cause**: Large documents or browser resource limitations.
+
+**Solution**:
+
+1. **Close unused tabs**: Free up browser memory
+2. **Split large documents**: Consider breaking very long documents into sections
+3. **Disable extensions**: Some browser extensions slow down web apps
+4. **Use a modern browser**: Chrome, Firefox, Safari, or Edge work best
+
+## AI chat issues
+
+### AI not responding
+
+**Cause**: API connection issues or rate limiting.
+
+**Solution**:
+
+- **Wait a moment**: Sometimes responses take a few seconds
+- **Check internet connection**: Ensure you're online
+- **Refresh the page**: Reconnect to the AI service
+- **Try again later**: If services are overloaded
+
+### AI suggestions not applying
+
+**Cause**: User action required to accept edits.
+
+**Solution**: When the AI suggests edits to your document, you'll see "Accept" and "Reject" buttons at the bottom of the editor panel. Click "Accept" to apply the changes.
+
+<Note>
+  AI-generated LaTeX changes must be manually accepted to prevent unwanted modifications to your work.
+</Note>
+
+## Browser compatibility
+
+Typeset works best on modern browsers:
+
+| Browser | Minimum Version | Notes |
+|---------|----------------|-------|
+| Chrome | 90+ | Recommended |
+| Firefox | 88+ | Recommended |
+| Safari | 14+ | Works well |
+| Edge | 90+ | Works well |
+| Opera | 76+ | Should work |
+
+<Warning>
+  Internet Explorer is not supported. Mobile browsers have a dedicated responsive layout.
+</Warning>
+
+## Mobile device issues
+
+### Different layout on mobile
+
+**Expected behavior**: Typeset automatically switches to a tab-based layout on mobile devices.
+
+- **Desktop**: Three-panel layout (chat | editor | preview)
+- **Mobile**: Tabbed layout (switch between chat, editor, and preview)
+
+### Tabs not showing content
+
+**Solution**: Tap the tab name at the bottom of the screen to switch between:
+
+- **Chat tab**: AI assistant and conversation
+- **Editor tab**: LaTeX code editor  
+- **Preview tab**: Compiled PDF output
+
+## File and project limitations
+
+### Current limitations
+
+<AccordionGroup>
+  <Accordion title="Single-file projects">
+    Typeset currently focuses on single-file LaTeX documents. Multi-file projects with includes or separate image files may not work as expected.
+  </Accordion>
+  
+  <Accordion title="Image uploads">
+    Direct image upload and inclusion is not yet fully supported. Consider using external URLs or working without images initially.
+  </Accordion>
+  
+  <Accordion title="Custom fonts">
+    Tectonic includes standard LaTeX fonts. Custom font installation is not currently supported.
+  </Accordion>
+  
+  <Accordion title="Bibliography files">
+    External `.bib` files are not yet supported. Consider using embedded bibliography entries for now.
+  </Accordion>
+</AccordionGroup>
+
+## Getting more help
+
+If you're still experiencing issues:
+
+1. **Check the guides**: Review the other documentation pages for detailed information
+2. **Ask the AI**: Use the in-editor chat to get help with LaTeX syntax and errors
+3. **Contact support**: Reach out through Typeset's support channels
+4. **Community forums**: Share your issue with other Typeset users
+
+<Tip>
+  When reporting issues, include:
+  - What you were trying to do
+  - What happened instead
+  - Error messages (if any)
+  - Browser and OS information
+  - Steps to reproduce the problem
+</Tip>
+
+## Related resources
+
+- [Creating projects](/guides/creating-projects) - Learn project management basics
+- [LaTeX basics](/guides/latex-basics) - Master LaTeX syntax to avoid errors
+- [Sharing projects](/guides/sharing-projects) - Understand collaboration features

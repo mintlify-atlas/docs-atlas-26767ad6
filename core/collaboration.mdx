@@ -1,0 +1,163 @@
+---
+title: Real-time collaboration
+description: Work together on LaTeX documents with live cursors and instant updates
+---
+
+Typeset enables real-time collaboration, allowing multiple users to work on the same LaTeX document simultaneously. Built with Liveblocks and Yjs, changes sync instantly across all connected users.
+
+## How collaboration works
+
+When you open a project in Typeset:
+
+1. **Connection established** - Your browser connects to the Liveblocks room for that project
+2. **Document loaded** - The shared document state loads from the Yjs CRDT (Conflict-free Replicated Data Type)
+3. **Real-time sync** - Every keystroke syncs to all collaborators within milliseconds
+4. **Conflict resolution** - Yjs automatically merges concurrent edits without conflicts
+
+<Info>
+CRDT technology ensures that even when multiple users edit the same section simultaneously, all changes are preserved and merged intelligently.
+</Info>
+
+## Seeing other collaborators
+
+### Active user indicators
+
+The top navigation bar shows who's currently working on the document:
+
+- **Avatar display** - Circular avatars represent each active user
+- **Hover details** - Hover over an avatar to see the user's name
+- **Online status** - Only users currently viewing the document appear
+
+### Live cursors
+
+Inside the editor, you'll see:
+
+- **Colored cursors** - Each collaborator has a unique color for their cursor
+- **Name labels** - User names appear near their cursor position
+- **Selection highlights** - When someone selects text, it's highlighted in their color
+- **Real-time movement** - Cursors move as others type and navigate
+
+<Note>
+Your own cursor appears in your assigned color to you, but others see it with your name label attached.
+</Note>
+
+## Inviting collaborators
+
+<Steps>
+  <Step title="Open the invite dialog">
+    Click the **Invite** button in the top-right corner of the project interface.
+  </Step>
+
+  <Step title="Enter email address">
+    Type the email address of the person you want to invite. They must have a Typeset account.
+  </Step>
+
+  <Step title="Send invitation">
+    Click **Send Invite**. The user receives an email notification and the project appears in their dashboard.
+  </Step>
+</Steps>
+
+## Managing access
+
+The invite dialog shows:
+
+- **Current collaborators** - List of users with access to the project
+- **Access level** - Each user's permission level (owner or editor)
+- **Remove access** - Option to revoke a user's access to the project
+
+<Info>
+Only project owners can invite new collaborators and manage access permissions.
+</Info>
+
+## Collaboration scenarios
+
+### Simultaneous editing
+
+When multiple users edit different parts of the document:
+
+- Changes appear instantly for everyone
+- No need to save or refresh
+- Each user maintains their own cursor position
+- Undo/redo works independently for each user
+
+### Editing the same section
+
+When users edit nearby or overlapping text:
+
+- Yjs merges changes automatically
+- Character-level precision prevents data loss
+- Both users' changes are preserved
+- The final result reflects all edits
+
+<Note>
+While Yjs prevents data loss, simultaneous edits to the same sentence can produce unexpected results. Coordinate with your team for complex edits.
+</Note>
+
+### Reviewing changes together
+
+Collaboration is especially useful when:
+
+- **Pair writing** - One person drafts while another suggests improvements
+- **Code review** - Navigate through the document together, discussing changes
+- **Teaching** - Instructors can demonstrate LaTeX techniques in real-time
+- **Debugging** - Collaboratively fix compilation errors
+
+## Awareness features
+
+Liveblocks awareness shows more than just cursors:
+
+- **Typing indicators** - See when others are actively typing
+- **Active section** - Know which part of the document others are viewing
+- **Connection status** - Indicator shows if you're connected or reconnecting
+
+## Offline behavior
+
+If your connection is interrupted:
+
+- **Local edits continue** - Keep working in the editor
+- **Changes queue** - Your edits are saved locally
+- **Automatic sync** - When reconnected, changes sync automatically
+- **Conflict resolution** - Yjs merges your offline changes with others' work
+
+<Info>
+You'll see a reconnecting indicator if the connection is lost. Most disconnections resolve in seconds.
+</Info>
+
+## Best practices
+
+<Steps>
+  <Step title="Communicate">
+    Use external chat (Slack, Discord) to coordinate who's working on which sections, especially for large documents.
+  </Step>
+
+  <Step title="Watch the cursors">
+    Before making major edits, check where other collaborators are working to avoid conflicting changes.
+  </Step>
+
+  <Step title="Test compilation frequently">
+    When collaborating, compile the document regularly to catch errors early before they accumulate.
+  </Step>
+
+  <Step title="Use sections wisely">
+    Divide your document into clear sections so multiple people can work on different parts without overlap.
+  </Step>
+</Steps>
+
+## Compilation in collaborative mode
+
+When working with others:
+
+- **Anyone can compile** - All users can trigger PDF compilation
+- **Shared preview** - The PDF preview is **not** synced; each user sees their own compilation result
+- **Compile frequently** - Regular compilation helps catch issues early in collaborative editing
+
+<Note>
+The PDF preview and compilation errors are local to your session. Other users must compile separately to see the latest PDF.
+</Note>
+
+## Privacy and security
+
+- **Encrypted in transit** - All collaboration data uses secure WebSocket connections
+- **Access control** - Only invited users can view or edit the document
+- **No public rooms** - Projects are private by default
+- **Owner controls** - Project owners can revoke access at any time

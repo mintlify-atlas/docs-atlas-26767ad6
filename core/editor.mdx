@@ -1,0 +1,90 @@
+---
+title: LaTeX editor
+description: Write and edit LaTeX documents with real-time collaboration and syntax highlighting
+---
+
+The editor is the heart of Typeset, where you write and edit your LaTeX documents. Built on CodeMirror, it provides a powerful editing experience with syntax highlighting, collaborative cursors, and intelligent formatting.
+
+## Editor features
+
+The LaTeX editor includes:
+
+- **Syntax highlighting** for LaTeX commands, environments, and math expressions
+- **Line wrapping** to keep your code readable without horizontal scrolling
+- **Tab support** with proper indentation handling
+- **Theme support** that automatically adapts to light/dark mode
+- **Real-time collaboration** with visible user cursors and selections
+
+<Note>
+The editor uses CodeMirror 6 with the `codemirror-lang-latex` language package for LaTeX-specific syntax support.
+</Note>
+
+## Writing LaTeX
+
+<Steps>
+  <Step title="Start typing">
+    Click anywhere in the editor panel (center panel) and start writing your LaTeX code. The editor provides syntax highlighting as you type.
+  </Step>
+
+  <Step title="Use LaTeX commands">
+    Type LaTeX commands like `\section{}`, `\textbf{}`, or math environments. The syntax highlighting helps you identify commands, arguments, and environments.
+  </Step>
+
+  <Step title="Format your code">
+    Press `Tab` to indent your code. The editor respects LaTeX formatting conventions and maintains proper indentation.
+  </Step>
+</Steps>
+
+## Collaborative editing
+
+When multiple users work on the same document, the editor shows:
+
+- **Colored cursors** representing each collaborator
+- **User names** displayed near their cursor position
+- **Real-time updates** as other users type
+- **Selection highlights** showing what others have selected
+
+<Info>
+Each collaborator is assigned a unique color that identifies their cursor and selections throughout the document.
+</Info>
+
+## Review mode
+
+When the AI assistant suggests changes to your document, the editor switches to a **side-by-side comparison view** that shows:
+
+- Your current document on the left
+- The AI's suggested version on the right
+- Visual diff highlighting to see exactly what changed
+
+<Steps>
+  <Step title="Review the changes">
+    Compare the two versions side-by-side. Changed lines are highlighted so you can quickly spot modifications.
+  </Step>
+
+  <Step title="Accept or reject">
+    Click **Accept** to apply the changes, or **Reject** to keep your original document. The buttons appear at the bottom of the editor panel.
+  </Step>
+
+  <Step title="Continue editing">
+    After accepting or rejecting, the editor returns to normal mode and you can continue editing.
+  </Step>
+</Steps>
+
+## Keyboard shortcuts
+
+The editor supports standard keyboard shortcuts:
+
+- `Tab` - Insert tab or indent
+- `Cmd/Ctrl + Z` - Undo
+- `Cmd/Ctrl + Shift + Z` - Redo
+- `Cmd/Ctrl + F` - Find
+- `Cmd/Ctrl + H` - Find and replace
+
+## Theme customization
+
+The editor automatically adapts to your system theme:
+
+- **Light mode** uses the GitHub Light theme with clear, readable colors
+- **Dark mode** uses the GitHub Dark theme with reduced eye strain
+
+Theme switching happens instantly when you change your system settings or toggle the theme in Typeset.

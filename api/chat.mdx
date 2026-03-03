@@ -1,0 +1,139 @@
+---
+title: Chat API
+description: Stream AI-powered chat responses for LaTeX document editing
+---
+
+The Chat API enables real-time interaction with AI assistants specialized in LaTeX document editing. It streams responses and supports tool calling for file editing operations.
+
+## Endpoint
+
+```
+POST /api/chat
+```
+
+## Request parameters
+
+<ParamField body="messages" type="array" required>
+  Array of message objects representing the conversation history. Each message should contain:
+  - `role` (string): Either "user" or "assistant"
+  - `content` (string): The message content
+</ParamField>
+
+<ParamField body="model" type="string">
+  The AI model to use for generating responses. Supported values:
+  - `gpt-4.1-mini` (default) - OpenAI GPT-4.1 Mini
+  - `gemini-2.5-flash` - Google Gemini 2.5 Flash
+  
+  If not specified or an unsupported value is provided, defaults to `gpt-4.1-mini`.
+</ParamField>
+
+## Response
+
+Returns a streaming response with AI-generated content. The maximum streaming duration is 30 seconds.
+
+The response uses the AI SDK's data stream format, which includes:
+- Text content chunks
+- Tool calls (for the `editFile` tool)
+- Tool results
+
+## System behavior
+
+The AI assistant operates with a specialized system prompt that defines its role as an expert LaTeX developer. Key behaviors include:
+
+- **Iterative editing**: Works back and forth with users on LaTeX documents
+- **File editing**: Uses the `editFile` tool to modify LaTeX files
+- **User-focused**: Prioritizes immediate questions and needs
+- **Mathematical expressions**: Supports GitHub Flavored Markdown with LaTeX math syntax
+- **Language adaptation**: Responds in the same language as the user's message
+
+The system prompt is loaded from `docs/system-prompt.md` at runtime.
+
+## Available tools
+
+The assistant has access to the following tool:
+
+### editFile
+
+Edits the current LaTeX file with new content.
+
+**Parameters:**
+- `newFile` (string, required): The complete new file content that will replace the current file
+
+## Example request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://your-domain.com/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      {
+        "role": "user",
+        "content": "Add a table of contents to my document"
+      }
+    ],
+    "model": "gpt-4.1-mini"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://your-domain.com/api/chat', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    messages: [
+      {
+        role: 'user',
+        content: 'Add a table of contents to my document'
+      }
+    ],
+    model: 'gpt-4.1-mini'
+  })
+});
+
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  const chunk = decoder.decode(value);
+  console.log(chunk);
+}
+```
+
+```python Python
+import requests
+import json
+
+url = 'https://your-domain.com/api/chat'
+data = {
+    'messages': [
+        {
+            'role': 'user',
+            'content': 'Add a table of contents to my document'
+        }
+    ],
+    'model': 'gpt-4.1-mini'
+}
+
+response = requests.post(url, json=data, stream=True)
+
+for chunk in response.iter_content(chunk_size=None):
+    if chunk:
+        print(chunk.decode('utf-8'))
+```
+
+</CodeGroup>
+
+## Error handling
+
+The endpoint returns standard HTTP error codes:
+
+- `400` - Bad request (invalid JSON or missing required fields)
+- `500` - Internal server error (model unavailable, system prompt not found)
+
+Errors may occur during streaming and will be included in the stream response.

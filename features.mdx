@@ -1,0 +1,280 @@
+---
+title: Features
+description: Comprehensive overview of Typeset's capabilities
+---
+
+Typeset combines the power of LaTeX with modern collaboration tools and AI assistance. Here's everything you can do with Typeset.
+
+## Zero-setup LaTeX editing
+
+Write and compile LaTeX documents directly in your browser without any installation or configuration.
+
+### Browser-based editor
+
+Typeset uses **CodeMirror** as its editing foundation, providing:
+
+- Syntax highlighting for LaTeX
+- Line wrapping for long equations
+- Keyboard shortcuts (`Tab` for indentation)
+- Light and dark themes (GitHub Light/Dark)
+- Custom theme support
+
+```typescript
+// components/project/editor.tsx:57
+const stateConfig = {
+  doc: yText.toString(),
+  extensions: [
+    basicSetup,
+    customTheme,
+    resolvedTheme === "dark" ? githubDark : githubLight,
+    EditorView.lineWrapping,
+    latex(),
+    yCollab(yText, yProvider.awareness),
+    keymap.of([...defaultKeymap, { key: "Tab", run: insertTab }]),
+  ],
+};
+```
+
+### Default template
+
+Every new project starts with a ready-to-use LaTeX template that includes standard document structure, title, author, and date fields. See `app/actions.ts:10` for the template generation.
+
+<Note>
+  The template is stored as a Yjs document, enabling real-time collaboration from the moment you create a project.
+</Note>
+
+## AI-powered code assistant
+
+Get intelligent help from leading AI models that understand LaTeX and can edit your documents.
+
+### Multiple AI models
+
+Choose between two powerful models:
+
+- **GPT-4.1 mini** (OpenAI) - Fast and capable
+- **Gemini 2.5 Flash** (Google) - High-performance reasoning
+
+```typescript
+// app/api/chat/route.ts:14
+let selectedModel;
+switch (model) {
+  case "gpt-4.1-mini":
+    selectedModel = openai("gpt-4.1-mini");
+    break;
+  case "gemini-2.5-flash":
+    selectedModel = google("gemini-2.5-flash");
+    break;
+  default:
+    selectedModel = openai("gpt-4.1-mini");
+}
+```
+
+### Editing capabilities
+
+The AI assistant can directly modify your LaTeX document using the `editFile` tool. When the AI suggests changes:
+
+1. A side-by-side diff appears in the editor
+2. You can review the changes before accepting
+3. Accept to apply, or reject to keep your current version
+4. Accepted edits automatically trigger compilation
+
+See the implementation in `components/project/chat.tsx:61` and `components/project/editor.tsx:71`.
+
+### Context-aware help
+
+The AI has access to your entire document through file attachments:
+
+```typescript
+// components/project/chat.tsx:150
+const fileContent = yProvider.getYDoc().getText("codemirror").toString();
+const base64Content = btoa(
+  new TextEncoder()
+    .encode(fileContent)
+    .reduce((data, byte) => data + String.fromCharCode(byte), "")
+);
+```
+
+This enables the AI to provide specific suggestions based on your document's content and structure.
+
+## Real-time collaboration
+
+Work with your team on the same document simultaneously with conflict-free editing.
+
+### Powered by Liveblocks
+
+Typeset uses **Liveblocks** with **Yjs** for operational transformation, ensuring all collaborators see consistent document state even when editing the same lines.
+
+```typescript
+// components/project/editor.tsx:51
+yProvider.awareness.setLocalStateField("user", {
+  name: userInfo.name,
+  color: userInfo.color,
+  colorLight: userInfo.color + "80",
+});
+```
+
+### Live presence
+
+See who's actively working on your document:
+
+- Avatars in the navigation bar show online collaborators
+- Colored cursors and selections show where others are editing
+- Real-time updates as changes are made
+
+### Access control
+
+Manage who can access your projects:
+
+- **Invite by email**: Grant write access to collaborators (`app/actions.ts:97`)
+- **Remove access**: Revoke permissions when needed (`app/actions.ts:107`)
+- **Leave projects**: Exit shared projects you no longer need (`app/actions.ts:67`)
+- **Owner controls**: Project owners can delete projects (`app/actions.ts:62`)
+
+<Warning>
+  All invited users receive `room:write` permissions. Read-only access is not currently supported.
+</Warning>
+
+## Instant PDF compilation
+
+Compile your LaTeX documents to PDF in seconds with detailed error reporting.
+
+### Tectonic compiler
+
+Typeset uses **Tectonic**, a modern LaTeX compiler that:
+
+- Downloads packages automatically
+- Compiles significantly faster than traditional TeX distributions
+- Provides clear error messages
+- Runs in isolated environments for security
+
+```typescript
+// app/api/compile/route.ts:27
+const proc = spawn(
+  tectonicPath,
+  ["-X", "compile", srcPath, "--outdir", outDir, "--synctex=false"],
+  {
+    env: {
+      ...process.env,
+      HOME: baseDir,
+      XDG_CACHE_HOME: cacheDir,
+      TECTONIC_CACHE_DIR: cacheDir,
+      TEXMFVAR: cacheDir,
+    },
+  }
+);
+```
+
+### Error handling
+
+When compilation fails, you see:
+
+- The specific error message from the LaTeX compiler
+- Line numbers where errors occurred
+- A clear alert in the preview panel
+
+See `components/project/collaborative-editor.tsx:421` for the error display UI.
+
+### One-click compilation
+
+Click the **Compile** button or press the play icon to compile. The process:
+
+1. Sends your document content to `/api/compile`
+2. Tectonic processes the LaTeX on the server
+3. Returns a PDF blob on success
+4. Automatically switches to the preview tab
+
+## Project management
+
+Organize and manage your LaTeX documents effectively.
+
+### Create projects
+
+```typescript
+// app/actions.ts:29
+export async function createProject() {
+  const projectId = nanoid();
+  const yDoc = new Y.Doc();
+  const yText = yDoc.getText("codemirror");
+  const template = generateLatexTemplate(user.fullName || "Author");
+  yText.insert(0, template);
+  // ...
+}
+```
+
+New projects are created with:
+- Unique nanoid identifiers
+- Default LaTeX template
+- Automatic owner permissions
+- Initialized Yjs document for collaboration
+
+### Rename projects
+
+Click the project title in the navigation bar to rename. Project titles:
+
+- Can be 1-60 characters long
+- Update across all views (`app/actions.ts:81`)
+- Are stored in Liveblocks room metadata
+
+### Project views
+
+Access your projects from two dashboards:
+
+- **My Projects**: Projects you own
+- **Shared with Me**: Projects others have invited you to
+
+## Modern CodeMirror editor
+
+The editor includes advanced features from CodeMirror 6:
+
+- **LaTeX language support**: Syntax-aware editing with the `codemirror-lang-latex` package
+- **Basic setup**: Line numbers, search, bracket matching, and more
+- **Custom key bindings**: Tab key for indentation
+- **Theme integration**: Syncs with your system theme preference
+- **Line wrapping**: Long lines wrap automatically for better readability
+
+### Side-by-side diff view
+
+When the AI suggests edits, CodeMirror's **MergeView** shows changes:
+
+```typescript
+// components/project/editor.tsx:78
+view = new MergeView({
+  a: stateConfig,  // Original document
+  b: {             // AI-suggested changes
+    doc: newFile,
+    extensions: [
+      // ...
+      EditorView.editable.of(false),
+      EditorState.readOnly.of(true),
+    ],
+  },
+  parent: editor,
+});
+```
+
+## Responsive design
+
+Typeset works seamlessly across devices:
+
+- **Desktop**: Three-panel layout with resizable panels
+- **Mobile**: Tab-based interface for chat, editor, and preview
+- **Tablet**: Adaptive layout based on screen size
+
+See `components/project/collaborative-editor.tsx:138` for the mobile-optimized UI.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Editor" icon="code" href="/core/editor">
+    Deep dive into the CodeMirror editor
+  </Card>
+  <Card title="AI assistant" icon="robot" href="/core/ai-assistant">
+    Learn advanced AI collaboration techniques
+  </Card>
+  <Card title="Collaboration" icon="users" href="/core/collaboration">
+    Master real-time editing features
+  </Card>
+  <Card title="Compilation" icon="file-pdf" href="/core/compilation">
+    Understand the LaTeX compilation process
+  </Card>
+</CardGroup>

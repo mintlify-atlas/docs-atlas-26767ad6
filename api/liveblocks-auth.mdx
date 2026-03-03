@@ -1,0 +1,157 @@
+---
+title: Liveblocks authentication API
+description: Obtain authentication tokens for real-time collaboration features
+---
+
+The Liveblocks Authentication API provides authentication tokens for real-time collaboration features. It integrates with Clerk for user authentication and Liveblocks for presence and collaboration.
+
+## Endpoint
+
+```
+POST /api/liveblocks-auth
+```
+
+## Authentication required
+
+This endpoint requires an authenticated user session via Clerk. Requests must include valid Clerk session credentials.
+
+## Request parameters
+
+This endpoint does not require a request body. User information is automatically extracted from the authenticated session.
+
+## Response
+
+On success, returns a Liveblocks authentication token in the response body. The exact format depends on the Liveblocks SDK but typically includes:
+
+- Authentication token for WebSocket connections
+- User identity information
+- Token expiration time
+
+## User identification
+
+The API automatically identifies users with the following information:
+
+<ResponseField name="User ID" type="string">
+  The user's primary email address is used as the unique identifier
+</ResponseField>
+
+<ResponseField name="User info" type="object">
+  Additional user information sent to Liveblocks:
+  
+  - `name` (string): User's full name from Clerk, or "Unnamed User" if not set
+  - `imageUrl` (string): User's profile image URL from Clerk
+  - `color` (string): Randomly assigned color for user presence indicators
+</ResponseField>
+
+## Color assignment
+
+Each authentication request assigns a random color to the user from a predefined palette:
+
+```
+#E74C3C, #8E44AD, #6C5CE7, #2E86AB, #1E3A8A, #059669,
+#D97706, #DC2626, #7C2D12, #92400E, #78350F, #374151,
+#059669, #0D9488, #7C3AED, #5B21B6
+```
+
+This color is used for cursor indicators and presence badges in the collaborative editor.
+
+## Error responses
+
+### User not found (404)
+
+Returned when no authenticated user is found in the session.
+
+```
+User not found
+```
+
+### Email not set (404)
+
+Returned when the authenticated user does not have a primary email address configured.
+
+```
+Email address not set
+```
+
+## Example request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://your-domain.com/api/liveblocks-auth \
+  -H "Cookie: __session=<clerk-session-token>"
+```
+
+```javascript JavaScript
+// In a browser with Clerk authentication
+const response = await fetch('/api/liveblocks-auth', {
+  method: 'POST',
+  credentials: 'include', // Include cookies
+});
+
+if (response.ok) {
+  const authData = await response.text();
+  // Use auth data to connect to Liveblocks
+} else {
+  const error = await response.text();
+  console.error(error);
+}
+```
+
+```javascript React Hook
+import { useEffect, useState } from 'react';
+
+function useLiveblocksAuth() {
+  const [authToken, setAuthToken] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function authenticate() {
+      try {
+        const response = await fetch('/api/liveblocks-auth', {
+          method: 'POST',
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const token = await response.text();
+          setAuthToken(token);
+        } else {
+          const errorText = await response.text();
+          setError(errorText);
+        }
+      } catch (err) {
+        setError(err.message);
+      }
+    }
+
+    authenticate();
+  }, []);
+
+  return { authToken, error };
+}
+```
+
+</CodeGroup>
+
+## Integration with Liveblocks
+
+This endpoint is designed to work with the Liveblocks real-time collaboration platform. The authentication flow typically works as follows:
+
+1. User authenticates with Clerk
+2. Client calls `/api/liveblocks-auth` to obtain a Liveblocks token
+3. Client uses the token to establish a WebSocket connection to Liveblocks
+4. User can now participate in real-time collaboration features
+
+## Security considerations
+
+- Tokens are scoped to the authenticated user's email address
+- Each request generates a fresh authentication token
+- The endpoint requires a valid Clerk session
+- User information is pulled directly from Clerk (cannot be spoofed)
+
+## Environment variables
+
+This endpoint requires the following environment variable:
+
+- `LIVEBLOCKS_SECRET_KEY` - Secret key for authenticating with the Liveblocks API

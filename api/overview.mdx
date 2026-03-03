@@ -1,0 +1,63 @@
+---
+title: API overview
+description: Learn how to interact with Typeset's REST API for chat, compilation, and real-time collaboration
+---
+
+## Introduction
+
+Typeset provides a REST API that enables programmatic access to its core features:
+
+- **Chat API**: Interact with AI assistants for LaTeX document editing
+- **Compilation API**: Compile LaTeX documents to PDF
+- **Liveblocks Authentication API**: Obtain authentication tokens for real-time collaboration
+
+## Base URL
+
+All API endpoints are relative to your Typeset deployment URL:
+
+```
+https://your-domain.com/api
+```
+
+## Authentication
+
+API endpoints have different authentication requirements:
+
+- `/api/chat` - No authentication required
+- `/api/compile` - No authentication required
+- `/api/liveblocks-auth` - Requires user authentication via Clerk
+
+Authenticated endpoints use Clerk for session management. The `/api/liveblocks-auth` endpoint requires a valid user session and will return a 404 error if the user is not found or does not have a primary email address set.
+
+## Request format
+
+All POST requests should include a `Content-Type: application/json` header with a JSON body.
+
+## Response format
+
+Responses vary by endpoint:
+
+- `/api/chat` - Returns a streaming response with AI-generated content
+- `/api/compile` - Returns PDF binary data on success, or JSON error on failure
+- `/api/liveblocks-auth` - Returns Liveblocks authentication token
+
+## Rate limits
+
+The `/api/chat` endpoint has a maximum duration of 30 seconds for streaming responses.
+
+## Error handling
+
+API errors are returned with appropriate HTTP status codes:
+
+- `400` - Bad request (compilation errors, invalid input)
+- `404` - Resource not found (user not found, email not set)
+- `500` - Internal server error
+
+Error responses from `/api/compile` include a JSON body:
+
+```json
+{
+  "error": true,
+  "message": "Error description"
+}
+```

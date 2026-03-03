@@ -1,0 +1,188 @@
+---
+title: Sharing and collaborating on projects
+description: Invite team members to collaborate on LaTeX projects in real-time with Typeset
+---
+
+Typeset enables real-time collaboration on LaTeX documents. Invite collaborators, see their cursors as they edit, and work together seamlessly.
+
+## Inviting collaborators
+
+Share your project with others by inviting them via email.
+
+<Steps>
+  <Step title="Open your project">
+    Navigate to the project you want to share in the editor.
+  </Step>
+  
+  <Step title="Click Invite">
+    Click the "Invite" button in the top-right corner of the editor.
+  </Step>
+  
+  <Step title="Enter email address">
+    In the invite dialog, enter the email address of the person you want to invite.
+  </Step>
+  
+  <Step title="Send invitation">
+    Click "Invite" to grant them access to the project.
+  </Step>
+</Steps>
+
+<Note>
+  Invited users receive write access to the project. They can edit, compile, and chat, but cannot delete the project.
+</Note>
+
+## Collaboration features
+
+When working with others, Typeset provides several real-time collaboration features:
+
+### Live presence indicators
+
+See who else is currently viewing or editing the project:
+
+- **Avatars**: Collaborator avatars appear in the top navigation
+- **Live cursors**: See where others are typing in real-time
+- **Active status**: Know when team members are online
+
+### Real-time editing
+
+All changes sync instantly across all collaborators:
+
+- **Simultaneous editing**: Multiple people can edit different parts of the document at once
+- **Conflict-free**: The editor automatically merges changes without conflicts
+- **No save button**: Everything is saved automatically as you type
+
+### Shared compilation
+
+When anyone compiles the document, all collaborators see the updated PDF:
+
+- **Instant preview**: PDF updates appear for everyone
+- **Error visibility**: Compilation errors are visible to all collaborators
+- **Consistent output**: Everyone sees the same compiled result
+
+## Managing project access
+
+View and manage who has access to your project.
+
+<Steps>
+  <Step title="Open the Invite dialog">
+    Click the "Invite" button in your project.
+  </Step>
+  
+  <Step title="View collaborators">
+    See the list of everyone with access to the project, including their email addresses.
+  </Step>
+  
+  <Step title="Remove access (optional)">
+    Project owners can remove collaborators by clicking the remove button next to their name.
+  </Step>
+</Steps>
+
+<Accordion title="Who can remove collaborators?">
+  Only the project owner (the person who created the project) can remove other users' access. The owner's email is stored in the project metadata.
+</Accordion>
+
+## Project permissions
+
+Typeset uses a simple permission model:
+
+| Permission | Owner | Collaborator |
+|------------|-------|-------------|
+| View and edit | ✓ | ✓ |
+| Compile | ✓ | ✓ |
+| Use AI chat | ✓ | ✓ |
+| Rename project | ✓ | ✓ |
+| Invite others | ✓ | ✓ |
+| Remove collaborators | ✓ | ✗ |
+| Delete project | ✓ | ✗ |
+
+<Note>
+  All collaborators have write access. There is currently no read-only access mode.
+</Note>
+
+## Collaboration best practices
+
+### Communication
+
+Use the built-in chat panel for project-related discussions:
+
+- **AI assistance**: Ask the AI to generate or edit LaTeX code
+- **Team coordination**: Discuss changes with collaborators in context
+- **Edit suggestions**: The AI can suggest edits that you can accept or reject
+
+### Avoiding conflicts
+
+While Typeset handles simultaneous editing automatically, these practices help:
+
+1. **Coordinate major edits**: Let team members know before making large structural changes
+2. **Work on different sections**: Split work by document sections when possible
+3. **Compile frequently**: Regular compilation helps catch issues early
+4. **Use the chat**: Communicate about what you're working on
+
+### Managing large teams
+
+<Tip>
+  For projects with many collaborators, consider:
+  - Designating one person to manage the document structure
+  - Using comments in the LaTeX source to mark sections
+  - Establishing a compilation schedule to avoid constant PDF updates
+</Tip>
+
+## Authentication requirements
+
+All collaborators must have a Typeset account:
+
+- **Sign up**: Invited users need to create an account using the same email address
+- **Email verification**: Email addresses must be verified through Clerk authentication
+- **Protected routes**: Project pages require authentication to access
+
+<Warning>
+  If you invite someone who doesn't have a Typeset account, they'll need to sign up before they can access the project.
+</Warning>
+
+## Removing yourself from a project
+
+If you no longer need access to a shared project:
+
+<Steps>
+  <Step title="Navigate to Shared With Me">
+    Go to the "Shared With Me" page from the navigation.
+  </Step>
+  
+  <Step title="Find the project">
+    Locate the project you want to leave.
+  </Step>
+  
+  <Step title="Leave project">
+    Click the leave button to remove your access.
+  </Step>
+</Steps>
+
+Leaving a project only affects your access and doesn't impact other collaborators.
+
+## Troubleshooting collaboration issues
+
+<AccordionGroup>
+  <Accordion title="Invited user can't see the project">
+    Ensure they:
+    - Created an account with the exact email address you invited
+    - Verified their email address
+    - Refreshed the "Shared With Me" page after signing up
+  </Accordion>
+  
+  <Accordion title="Changes aren't syncing">
+    Real-time sync issues are rare but can happen:
+    - Check your internet connection
+    - Refresh the page to reconnect
+    - Verify that Liveblocks services are operational
+  </Accordion>
+  
+  <Accordion title="Can't remove a collaborator">
+    Only the project owner can remove collaborators. If you're not the owner, ask the project creator to remove the user.
+  </Accordion>
+</AccordionGroup>
+
+## Related resources
+
+- [Creating projects](/guides/creating-projects) - Learn how to create and manage projects
+- [LaTeX basics](/guides/latex-basics) - Master LaTeX syntax for better collaboration
+- [Troubleshooting](/guides/troubleshooting) - Fix common issues

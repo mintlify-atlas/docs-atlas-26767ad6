@@ -1,0 +1,123 @@
+---
+title: Environment variables
+description: Complete guide to configuring environment variables for self-hosting Typeset
+---
+
+Typeset requires several environment variables to function properly. This page documents all required and optional environment variables needed for self-hosting.
+
+## Authentication variables
+
+Typeset uses Clerk for user authentication. You'll need to create a Clerk application and obtain your API keys.
+
+<ParamField path="NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" type="string" required>
+  Your Clerk publishable key. This is safe to expose in the browser and is used for client-side authentication.
+  
+  Find this in your Clerk dashboard under **API Keys**.
+</ParamField>
+
+<ParamField path="CLERK_SECRET_KEY" type="string" required>
+  Your Clerk secret key. This should be kept secure and is used for server-side authentication.
+  
+  Find this in your Clerk dashboard under **API Keys**.
+  
+  <Warning>
+    Never expose this key in client-side code or commit it to version control.
+  </Warning>
+</ParamField>
+
+## Collaboration variables
+
+Typeset uses Liveblocks for real-time collaboration features.
+
+<ParamField path="LIVEBLOCKS_SECRET_KEY" type="string" required>
+  Your Liveblocks secret key used for authenticating users and managing real-time collaboration.
+  
+  Get this from your [Liveblocks dashboard](https://liveblocks.io/dashboard) under **Project > API Keys**.
+  
+  <Warning>
+    This is a server-side only key and should never be exposed to the client.
+  </Warning>
+</ParamField>
+
+## AI model variables
+
+Typeset integrates with OpenAI and Google AI for the AI assistant feature.
+
+<ParamField path="OPENAI_API_KEY" type="string" required>
+  Your OpenAI API key for accessing GPT models. Used for the AI assistant that can edit documents and answer questions.
+  
+  Create an API key at [platform.openai.com](https://platform.openai.com/api-keys).
+</ParamField>
+
+<ParamField path="GOOGLE_GENERATIVE_AI_API_KEY" type="string" optional>
+  Your Google AI API key for accessing Gemini models. This is optional if you only want to use OpenAI models.
+  
+  Get an API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+</ParamField>
+
+## LaTeX compilation
+
+<Note>
+  Typeset uses Tectonic for LaTeX compilation. The binary must be installed separately and available in your system PATH or in the `bin/` directory of your project.
+</Note>
+
+<ParamField path="PATH" type="string">
+  Ensure your system PATH includes the Tectonic binary location:
+  
+  - Linux: `/usr/local/bin/tectonic` or `./bin/tectonic`
+  - macOS: `/usr/local/bin/tectonic` (default installation path)
+  - Custom location: Add your custom path to the system PATH
+</ParamField>
+
+## Optional deployment variables
+
+<ParamField path="NEXT_PUBLIC_VERCEL_URL" type="string" optional>
+  Automatically set by Vercel. This is used for generating absolute URLs in production.
+  
+  If self-hosting outside of Vercel, set this to your domain name (e.g., `typeset.yourdomain.com`).
+</ParamField>
+
+## Example configuration
+
+Create a `.env.local` file in your project root with the following variables:
+
+```bash
+# Authentication (Clerk)
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+
+# Collaboration (Liveblocks)
+LIVEBLOCKS_SECRET_KEY=sk_...
+
+# AI Models
+OPENAI_API_KEY=sk-...
+GOOGLE_GENERATIVE_AI_API_KEY=AI...
+
+# Optional: Custom domain
+NEXT_PUBLIC_VERCEL_URL=typeset.yourdomain.com
+```
+
+<Warning>
+  Never commit your `.env.local` file to version control. Add it to your `.gitignore` file to prevent accidental exposure of sensitive keys.
+</Warning>
+
+## Validating your configuration
+
+After setting up your environment variables:
+
+1. Restart your development server
+2. Check the browser console for any authentication errors
+3. Test creating a new project to verify Liveblocks integration
+4. Try the AI assistant to confirm API keys are working
+5. Compile a LaTeX document to ensure Tectonic is properly configured
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication setup" icon="key" href="/self-hosting/authentication">
+    Configure Clerk authentication in detail
+  </Card>
+  <Card title="Database configuration" icon="database" href="/self-hosting/database">
+    Set up Liveblocks storage
+  </Card>
+</CardGroup>

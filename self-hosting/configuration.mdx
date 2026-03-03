@@ -1,0 +1,429 @@
+---
+title: Configuration
+description: Configure environment variables and external services for self-hosting Typeset
+---
+
+## Environment variables
+
+Typeset requires environment variables for authentication, collaboration, and AI features. Create a `.env.local` file in your project root:
+
+```bash
+touch .env.local
+```
+
+<Warning>
+  Never commit `.env.local` to version control. The `.gitignore` file excludes it by default.
+</Warning>
+
+## Required services
+
+All self-hosted Typeset instances require:
+
+1. **Clerk** - User authentication and management
+2. **Liveblocks** - Real-time collaborative editing
+
+Optional services:
+
+3. **OpenAI** - GPT-4.1-mini AI assistant (default)
+4. **Google AI** - Gemini 2.5 Flash AI assistant (alternative)
+
+## Clerk authentication
+
+Clerk provides user authentication, session management, and user profiles.
+
+<Steps>
+  <Step title="Create a Clerk account">
+    Sign up at [clerk.com](https://clerk.com) and create a new application.
+  </Step>
+
+  <Step title="Get API keys">
+    From your Clerk dashboard:
+    
+    1. Navigate to **API Keys** in the sidebar
+    2. Copy the **Publishable Key** (starts with `pk_`)
+    3. Copy the **Secret Key** (starts with `sk_`)
+  </Step>
+
+  <Step title="Add to .env.local">
+    ```bash .env.local
+    # Clerk authentication
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+    CLERK_SECRET_KEY=sk_test_...
+    ```
+  </Step>
+
+  <Step title="Configure protected routes">
+    Protected routes are defined in `middleware.ts:3-7`:
+    
+    ```typescript
+    const isProtectedRoute = createRouteMatcher([
+      "/my-projects",
+      "/shared-with-me",
+      "/project(.*)",
+    ]);
+    ```
+    
+    Customize these routes based on your needs.
+  </Step>
+</Steps>
+
+<Note>
+  Clerk automatically handles sign-in, sign-up, and user profile pages. No additional configuration is needed.
+</Note>
+
+### Clerk configuration options
+
+Optional Clerk customization:
+
+**Authentication methods**
+
+In your Clerk dashboard, enable/disable authentication methods:
+- Email + password
+- Email magic links
+- OAuth providers (Google, GitHub, etc.)
+- Phone number
+
+**User profile fields**
+
+Configure which user fields are required:
+- Full name (used in collaboration)
+- Email address (used as Liveblocks identifier)
+- Profile image (used in editor avatars)
+
+**Session settings**
+
+Configure session duration and inactivity timeouts in the Clerk dashboard under **Settings → Sessions**.
+
+## Liveblocks collaboration
+
+Liveblocks enables real-time collaborative editing using Yjs CRDTs.
+
+<Steps>
+  <Step title="Create a Liveblocks account">
+    Sign up at [liveblocks.io](https://liveblocks.io) and create a new project.
+  </Step>
+
+  <Step title="Get API keys">
+    From your Liveblocks dashboard:
+    
+    1. Navigate to **API Keys**
+    2. Copy the **Secret Key** (starts with `sk_`)
+    3. Copy the **Public Key** (starts with `pk_`)
+  </Step>
+
+  <Step title="Add to .env.local">
+    ```bash .env.local
+    # Liveblocks collaboration
+    LIVEBLOCKS_SECRET_KEY=sk_...
+    NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY=pk_...
+    ```
+  </Step>
+</Steps>
+
+### Liveblocks configuration
+
+The Liveblocks integration is configured in:
+
+- **lib/liveblocks.ts** - Server-side client initialization
+- **liveblocks.config.ts** - Type definitions for user awareness
+- **app/api/liveblocks-auth/route.ts** - Authentication endpoint
+
+**User identification**
+
+Liveblocks users are identified by their Clerk email address (`app/api/liveblocks-auth/route.ts:38-46`):
+
+```typescript
+await liveblocks.identifyUser(email, {
+  userInfo: {
+    name: user.fullName || "Unnamed User",
+    imageUrl: user.imageUrl,
+    color: userColor, // Random color for cursor
+  },
+});
+```
+
+**Collaboration features**
+
+Liveblocks powers:
+- Real-time cursor positions
+- Live document editing with conflict resolution
+- Presence indicators (who's viewing/editing)
+- Undo/redo across collaborators
+
+## AI configuration (optional)
+
+The AI assistant supports multiple providers. Configure at least one:
+
+### OpenAI (default)
+
+Used for GPT-4.1-mini model:
+
+<Steps>
+  <Step title="Get an API key">
+    Create an API key at [platform.openai.com](https://platform.openai.com/api-keys).
+  </Step>
+
+  <Step title="Add to .env.local">
+    ```bash .env.local
+    # OpenAI API
+    OPENAI_API_KEY=sk-proj-...
+    ```
+  </Step>
+</Steps>
+
+### Google AI
+
+Used for Gemini 2.5 Flash model:
+
+<Steps>
+  <Step title="Get an API key">
+    Create an API key at [ai.google.dev](https://ai.google.dev).
+  </Step>
+
+  <Step title="Add to .env.local">
+    ```bash .env.local
+    # Google AI API
+    GOOGLE_API_KEY=AIza...
+    ```
+  </Step>
+</Steps>
+
+### Model selection
+
+Users can select models in the UI. The chat API (`app/api/chat/route.ts:15-24`) handles model routing:
+
+```typescript
+switch (model) {
+  case "gpt-4.1-mini":
+    selectedModel = openai("gpt-4.1-mini");
+    break;
+  case "gemini-2.5-flash":
+    selectedModel = google("gemini-2.5-flash");
+    break;
+  default:
+    selectedModel = openai("gpt-4.1-mini");
+}
+```
+
+<Note>
+  If no AI API keys are configured, the AI assistant will be unavailable but the LaTeX editor will still function.
+</Note>
+
+## Complete environment file
+
+Here's a complete `.env.local` template:
+
+```bash .env.local
+# Clerk Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+
+# Liveblocks Collaboration
+LIVEBLOCKS_SECRET_KEY=sk_...
+NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY=pk_...
+
+# OpenAI (optional)
+OPENAI_API_KEY=sk-proj-...
+
+# Google AI (optional)
+GOOGLE_API_KEY=AIza...
+
+# Next.js (optional)
+NEXT_PUBLIC_APP_URL=https://your-domain.com
+```
+
+## Vercel-specific configuration
+
+If deploying to Vercel, additional analytics services are pre-configured:
+
+**Vercel Analytics**
+
+Automatically enabled in `app/layout.tsx:45`. No configuration needed - works automatically when deployed to Vercel.
+
+**Vercel Speed Insights**
+
+Automatically enabled in `app/layout.tsx:46`. Tracks Web Vitals and performance metrics.
+
+Both services are no-op in local development.
+
+## Next.js configuration
+
+Next.js is configured in `next.config.ts` with:
+
+**MDX support**
+
+MDX files are supported for documentation:
+
+```typescript
+const withMDX = createMDX({
+  options: {
+    remarkPlugins: [remarkGfm], // GitHub Flavored Markdown
+    rehypePlugins: [],
+  },
+});
+```
+
+**Page extensions**
+
+Supported file extensions: `.js`, `.jsx`, `.md`, `.mdx`, `.ts`, `.tsx`
+
+**Webpack configuration**
+
+In development mode, webpack logging is set to `error` level to suppress cache serialization warnings from syntax highlighting themes.
+
+## Tectonic configuration
+
+Tectonic compilation is configured in `app/api/compile/route.ts`:
+
+**Binary path**
+
+Platform-specific paths (`route.ts:22-25`):
+
+```typescript
+let tectonicPath = join(process.cwd(), "bin", "tectonic");
+if (process.platform === "darwin") {
+  tectonicPath = "/usr/local/bin/tectonic";
+}
+```
+
+**Cache directories**
+
+Tectonic caches LaTeX packages in temporary directories (`route.ts:8-20`):
+
+```typescript
+const cacheDir = join(os.tmpdir(), "cache");
+env: {
+  HOME: baseDir,
+  XDG_CACHE_HOME: cacheDir,
+  TECTONIC_CACHE_DIR: cacheDir,
+  TEXMFVAR: cacheDir,
+}
+```
+
+**Compilation options**
+
+- Output directory: `os.tmpdir()/out/`
+- SyncTeX: Disabled (`--synctex=false`)
+- Timeout: 30 seconds (configurable via `maxDuration`)
+
+<Warning>
+  Ensure your deployment platform provides sufficient `/tmp` storage for LaTeX package caching. Vercel provides 512 MB of `/tmp` storage.
+</Warning>
+
+## Security best practices
+
+<Steps>
+  <Step title="Secure environment variables">
+    - Never commit `.env.local` to version control
+    - Use different keys for development and production
+    - Rotate API keys regularly
+    - Use Vercel's encrypted environment variables for production
+  </Step>
+
+  <Step title="Configure CORS">
+    If hosting the API separately, configure CORS in `next.config.ts`:
+    
+    ```typescript
+    async headers() {
+      return [
+        {
+          source: "/api/:path*",
+          headers: [
+            { key: "Access-Control-Allow-Origin", value: "https://your-domain.com" },
+            { key: "Access-Control-Allow-Methods", value: "POST, OPTIONS" },
+          ],
+        },
+      ];
+    }
+    ```
+  </Step>
+
+  <Step title="Enable HTTPS">
+    Always use HTTPS in production. Vercel provides automatic HTTPS certificates.
+  </Step>
+
+  <Step title="Monitor API usage">
+    Track API usage for:
+    - Clerk authentication requests
+    - Liveblocks collaboration bandwidth
+    - OpenAI/Google AI tokens
+    - Tectonic compilation frequency
+  </Step>
+</Steps>
+
+## Verify configuration
+
+Test your configuration:
+
+<CodeGroup>
+
+```bash Development
+# Start the dev server
+pnpm dev
+
+# Visit http://localhost:3000
+# Try:
+# 1. Sign in with Clerk
+# 2. Create a new project
+# 3. Test LaTeX compilation
+# 4. Try the AI assistant
+# 5. Test collaboration (open project in two browsers)
+```
+
+```bash Production
+# Build and start production server
+pnpm build
+pnpm start
+
+# Visit http://localhost:3000
+# Test all features
+```
+
+</CodeGroup>
+
+## Troubleshooting
+
+### Authentication not working
+
+1. Verify Clerk keys are correct
+2. Check `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` is accessible in browser
+3. Ensure protected routes are configured in `middleware.ts`
+4. Check Clerk dashboard for error logs
+
+### Collaboration not working
+
+1. Verify Liveblocks keys are correct
+2. Check `/api/liveblocks-auth` returns 200 status
+3. Ensure `NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY` is set
+4. Check browser console for WebSocket errors
+
+### AI assistant not working
+
+1. Verify API keys are set correctly
+2. Check API usage limits in provider dashboards
+3. Test with curl:
+   ```bash
+   curl https://api.openai.com/v1/models \
+     -H "Authorization: Bearer $OPENAI_API_KEY"
+   ```
+4. Check `/api/chat` route returns 200 status
+
+### LaTeX compilation failing
+
+1. Verify Tectonic binary exists and is executable
+2. Check `/tmp` directory permissions
+3. Ensure sufficient disk space for package cache
+4. Test Tectonic directly:
+   ```bash
+   ./bin/tectonic --version
+   ```
+
+## Next steps
+
+With configuration complete, proceed to:
+
+<Steps>
+  <Step title="Deploy to production">
+    Deploy to Vercel or your platform using [Deployment](/self-hosting/deployment).
+  </Step>
+</Steps>

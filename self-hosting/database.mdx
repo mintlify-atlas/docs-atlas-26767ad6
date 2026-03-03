@@ -1,0 +1,292 @@
+---
+title: Database
+description: Configure Liveblocks storage for real-time collaboration in Typeset
+---
+
+Typeset uses [Liveblocks](https://liveblocks.io) for real-time collaboration features, including synchronized document editing, user presence, and collaborative cursors.
+
+## Overview
+
+Liveblocks provides:
+
+- **Real-time synchronization**: Multiple users can edit the same LaTeX document simultaneously
+- **User presence**: See who's currently viewing or editing a document
+- **Collaborative cursors**: View other users' cursor positions in real-time
+- **Conflict-free merges**: Using Yjs CRDT for automatic conflict resolution
+- **Persistent storage**: Document state is stored and synced across sessions
+
+<Note>
+  Liveblocks is a hosted service. You don't need to manage any database infrastructure yourself.
+</Note>
+
+## Prerequisites
+
+- A Liveblocks account (sign up at [liveblocks.io](https://liveblocks.io))
+- A project created in your Liveblocks dashboard
+
+## Creating a Liveblocks project
+
+1. Sign in to your [Liveblocks dashboard](https://liveblocks.io/dashboard)
+2. Click **Create project**
+3. Choose a name for your project (e.g., "Typeset Self-Hosted")
+4. Select your preferred region for data storage
+5. Click **Create**
+
+## Obtaining your secret key
+
+1. In your project dashboard, navigate to **API Keys**
+2. Copy your **Secret key** (starts with `sk_`)
+3. Add it to your `.env.local` file:
+
+```bash
+LIVEBLOCKS_SECRET_KEY=sk_...
+```
+
+<Warning>
+  Your secret key should never be exposed to the client. It's used exclusively on the server to authenticate users and manage rooms.
+</Warning>
+
+## Server-side configuration
+
+Typeset initializes the Liveblocks client on the server:
+
+```tsx title="lib/liveblocks.ts"
+import { Liveblocks } from "@liveblocks/node";
+
+export const liveblocks = new Liveblocks({
+  secret: process.env.LIVEBLOCKS_SECRET_KEY!,
+});
+```
+
+See `lib/liveblocks.ts:3-5` for the implementation.
+
+## Authentication integration
+
+Liveblocks uses Clerk authentication to identify users. When a user joins a collaboration session, Typeset creates a Liveblocks user session:
+
+```tsx title="app/api/liveblocks-auth/route.ts"
+import { currentUser } from "@clerk/nextjs/server";
+import { liveblocks } from "@/lib/liveblocks";
+
+export async function POST() {
+  const user = await currentUser();
+  
+  if (!user) {
+    return new Response("User not found", { status: 404 });
+  }
+  
+  if (!user.primaryEmailAddress) {
+    return new Response("Email address not set", { status: 404 });
+  }
+  
+  const userColor = generateRandomColor();
+  const email = user.primaryEmailAddress.emailAddress;
+  
+  // Identify the user and return the result
+  const { status, body } = await liveblocks.identifyUser(email, {
+    userInfo: {
+      name: user.fullName || "Unnamed User",
+      imageUrl: user.imageUrl,
+      color: userColor,
+    },
+  });
+  
+  return new Response(body, { status });
+}
+```
+
+See `app/api/liveblocks-auth/route.ts:27-50` for the complete implementation.
+
+## User information structure
+
+Each collaborative user has the following information:
+
+```typescript title="liveblocks.config.ts"
+export type UserInfo = {
+  name: string;        // User's full name from Clerk
+  imageUrl: string;    // Profile image URL from Clerk
+  color: string;       // Random color for cursor/presence
+};
+
+export type UserAwareness = {
+  user?: UserInfo;
+};
+```
+
+See `liveblocks.config.ts:1-9`.
+
+### User colors
+
+Each user is assigned a random color from a predefined palette for their cursor and presence indicator:
+
+- `#E74C3C` - Red
+- `#8E44AD` - Purple  
+- `#6C5CE7` - Indigo
+- `#2E86AB` - Blue
+- `#059669` - Green
+- `#D97706` - Amber
+- And more...
+
+This ensures users are visually distinct in collaborative sessions.
+
+## Client-side setup
+
+Typeset uses the following Liveblocks packages on the client:
+
+- `@liveblocks/client` - Core client library
+- `@liveblocks/react` - React hooks and components
+- `@liveblocks/yjs` - Yjs CRDT integration
+
+### Yjs integration
+
+Typeset uses Yjs for conflict-free collaborative text editing. The integration with CodeMirror enables real-time multi-user editing:
+
+```bash
+npm install @liveblocks/yjs y-codemirror.next yjs
+```
+
+These packages work together to:
+
+1. Sync document state across all connected users
+2. Automatically resolve editing conflicts
+3. Maintain document consistency
+4. Preserve undo/redo history per user
+
+## Room-based collaboration
+
+Liveblocks uses "rooms" to organize collaborative sessions. In Typeset:
+
+- Each LaTeX project is a separate Liveblocks room
+- Room IDs are based on project identifiers
+- Users join/leave rooms as they navigate projects
+- Room state persists even when no users are connected
+
+<Note>
+  Room data is automatically persisted by Liveblocks. You don't need to manually save document state.
+</Note>
+
+## Configuring room permissions
+
+In your Liveblocks dashboard:
+
+1. Navigate to **Permissions**
+2. Configure who can access rooms:
+   - **Public rooms**: Anyone with the link can join
+   - **Private rooms**: Only authenticated users can join
+   - **Custom permissions**: Define fine-grained access rules
+
+<Warning>
+  For Typeset, ensure rooms are configured as **private** to protect user documents. Access should be restricted to authenticated users only.
+</Warning>
+
+## Monitoring and usage
+
+Liveblocks dashboard provides:
+
+- **Active connections**: Real-time view of connected users
+- **Room analytics**: Usage statistics per room
+- **API usage**: Track your API request volume
+- **Storage metrics**: Monitor stored data size
+
+### Rate limits
+
+Be aware of Liveblocks rate limits based on your plan:
+
+- **Free tier**: Limited connections and API requests
+- **Paid tiers**: Higher limits and enterprise options
+
+See [Liveblocks pricing](https://liveblocks.io/pricing) for details.
+
+## Data persistence
+
+Liveblocks automatically handles data persistence:
+
+- Document changes are saved in real-time
+- State is preserved when all users disconnect
+- Historical versions can be accessed (plan-dependent)
+- Data is encrypted at rest and in transit
+
+## Testing collaboration
+
+After configuration:
+
+1. Start your development server: `npm run dev`
+2. Sign in to your Typeset instance
+3. Create a new project
+4. Open the same project in multiple browser tabs or windows
+5. Make edits in one tab and verify they appear in others
+6. Check that user cursors and presence indicators work
+
+## Production considerations
+
+<Warning>
+  Before deploying to production:
+  
+  - Review your Liveblocks plan limits
+  - Configure production webhooks if needed
+  - Set up monitoring and alerts
+  - Review room permission settings
+  - Ensure secret key is stored securely
+</Warning>
+
+### Webhooks
+
+Liveblocks supports webhooks for events like:
+
+- User joins/leaves a room
+- Room is created or deleted
+- Storage is updated
+
+Configure webhooks in **Settings > Webhooks** if you need to respond to these events.
+
+### Data regions
+
+Choose a Liveblocks data region close to your users for optimal performance:
+
+- **US East** (Virginia)
+- **Europe** (Frankfurt)
+- **Asia Pacific** (Singapore)
+
+Configure this when creating your project or in **Settings > Data region**.
+
+## Troubleshooting
+
+### Users can't connect to rooms
+
+Verify:
+- `LIVEBLOCKS_SECRET_KEY` is correctly set
+- Users are authenticated via Clerk
+- Room permissions allow authenticated access
+
+### Changes not syncing
+
+Check:
+- Network connectivity between client and Liveblocks servers
+- Browser console for WebSocket errors
+- Liveblocks dashboard for service status
+
+### Rate limit errors
+
+If you're hitting rate limits:
+- Upgrade your Liveblocks plan
+- Optimize connection patterns
+- Implement connection pooling
+
+## Alternative: Self-hosted collaboration
+
+<Note>
+  While Liveblocks is a hosted service, you could replace it with a self-hosted alternative like [y-websocket](https://github.com/yjs/y-websocket) or [y-redis](https://github.com/yjs/y-redis) for complete data sovereignty.
+  
+  This would require significant code changes to replace the Liveblocks SDK with a custom Yjs provider.
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Environment variables" icon="code" href="/self-hosting/environment-variables">
+    Review all required configuration
+  </Card>
+  <Card title="Authentication" icon="key" href="/self-hosting/authentication">
+    Learn how Clerk integrates with Liveblocks
+  </Card>
+</CardGroup>

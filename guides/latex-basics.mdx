@@ -1,0 +1,420 @@
+---
+title: LaTeX basics for beginners
+description: Learn fundamental LaTeX syntax and commands to create professional documents in Typeset
+---
+
+LaTeX is a powerful document preparation system that produces beautifully formatted documents. This guide covers the essential syntax you need to get started with Typeset.
+
+## Document structure
+
+Every LaTeX document follows a basic structure:
+
+```latex
+\documentclass{article}
+
+% Preamble - document settings and packages
+\title{My Document}
+\author{Your Name}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+% Your content goes here
+
+\end{document}
+```
+
+<Note>
+  Everything before `\begin{document}` is the preamble. Everything between `\begin{document}` and `\end{document}` is your actual content.
+</Note>
+
+## Document classes
+
+The `\documentclass` command defines the type of document:
+
+```latex
+\documentclass{article}    % For short documents and articles
+\documentclass{report}     % For longer reports with chapters
+\documentclass{book}       % For books
+\documentclass{letter}     % For letters
+\documentclass{beamer}     % For presentations
+```
+
+You can pass options to customize the document:
+
+```latex
+\documentclass[12pt, a4paper]{article}  % 12pt font on A4 paper
+\documentclass[twocolumn]{article}      % Two-column layout
+```
+
+## Sections and headings
+
+Organize your document with hierarchical sections:
+
+```latex
+\section{Introduction}
+This is the introduction.
+
+\subsection{Background}
+Some background information.
+
+\subsubsection{Historical context}
+More detailed context.
+
+\paragraph{Note}
+A named paragraph.
+```
+
+<Tip>
+  Sections are automatically numbered. Use `\section*{Title}` with an asterisk to create an unnumbered section.
+</Tip>
+
+## Text formatting
+
+### Basic formatting
+
+```latex
+\textbf{Bold text}
+\textit{Italic text}
+\underline{Underlined text}
+\texttt{Monospace text}
+\emph{Emphasized text}
+```
+
+### Font sizes
+
+```latex
+{\tiny Tiny text}
+{\small Small text}
+{\normalsize Normal text}
+{\large Large text}
+{\Large Larger text}
+{\LARGE Even larger text}
+{\huge Huge text}
+{\Huge Hugest text}
+```
+
+### Line and paragraph breaks
+
+```latex
+First paragraph.
+
+Second paragraph. Use blank lines to separate paragraphs.
+
+Force a line break here.\\
+New line without a paragraph break.
+```
+
+## Lists
+
+### Unordered lists
+
+```latex
+\begin{itemize}
+  \item First item
+  \item Second item
+  \item Third item
+    \begin{itemize}
+      \item Nested item
+      \item Another nested item
+    \end{itemize}
+\end{itemize}
+```
+
+### Ordered lists
+
+```latex
+\begin{enumerate}
+  \item First item
+  \item Second item
+  \item Third item
+\end{enumerate}
+```
+
+### Description lists
+
+```latex
+\begin{description}
+  \item[Term 1] Definition of term 1
+  \item[Term 2] Definition of term 2
+\end{description}
+```
+
+## Mathematical expressions
+
+One of LaTeX's greatest strengths is typesetting mathematics.
+
+### Inline math
+
+Use `$...$` for math within text:
+
+```latex
+The equation $E = mc^2$ is famous.
+The variable $x$ represents the unknown.
+```
+
+### Display math
+
+Use `\[...\]` or equation environments for centered equations:
+
+```latex
+\[
+  f(x) = x^2 + 2x + 1
+\]
+
+\begin{equation}
+  \int_{0}^{\infty} e^{-x^2} dx = \frac{\sqrt{\pi}}{2}
+\end{equation}
+```
+
+<Note>
+  The `equation` environment automatically numbers equations. Use `equation*` for unnumbered equations.
+</Note>
+
+### Common math symbols
+
+```latex
+% Greek letters
+\alpha, \beta, \gamma, \Delta, \pi, \Sigma
+
+% Operators
+\times, \div, \pm, \leq, \geq, \neq, \approx
+
+% Fractions and roots
+\frac{numerator}{denominator}
+\sqrt{x}
+\sqrt[3]{x}  % cube root
+
+% Subscripts and superscripts
+x^2, x_i, x^{2n}, x_{i,j}
+
+% Summations and integrals
+\sum_{i=1}^{n} x_i
+\int_{a}^{b} f(x) dx
+\prod_{i=1}^{n} x_i
+```
+
+### Matrix notation
+
+```latex
+\[
+  \begin{matrix}
+    a & b \\
+    c & d
+  \end{matrix}
+\]
+
+% With brackets
+\[
+  \begin{bmatrix}
+    1 & 2 & 3 \\
+    4 & 5 & 6 \\
+    7 & 8 & 9
+  \end{bmatrix}
+\]
+```
+
+## Tables
+
+Create tables using the `tabular` environment:
+
+```latex
+\begin{table}[h]
+  \centering
+  \begin{tabular}{|l|c|r|}
+    \hline
+    Left & Center & Right \\
+    \hline
+    1 & 2 & 3 \\
+    4 & 5 & 6 \\
+    \hline
+  \end{tabular}
+  \caption{A sample table}
+  \label{tab:sample}
+\end{table}
+```
+
+<Accordion title="Table alignment options">
+  - `l` = left-aligned column
+  - `c` = center-aligned column
+  - `r` = right-aligned column
+  - `|` = vertical line
+  - `\hline` = horizontal line
+</Accordion>
+
+## Figures and images
+
+<Warning>
+  Typeset currently focuses on text-based LaTeX documents. Image handling may require additional packages or workarounds.
+</Warning>
+
+```latex
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.5\textwidth]{image.png}
+  \caption{A sample figure}
+  \label{fig:sample}
+\end{figure}
+```
+
+## Cross-references
+
+Reference sections, equations, figures, and tables:
+
+```latex
+\section{Introduction}
+\label{sec:intro}
+
+\begin{equation}
+  E = mc^2
+  \label{eq:einstein}
+\end{equation}
+
+As shown in Section~\ref{sec:intro}, Equation~\ref{eq:einstein} is important.
+```
+
+<Tip>
+  Use `~` (tilde) before `\ref` to prevent line breaks between "Section" and the number.
+</Tip>
+
+## Packages
+
+Extend LaTeX functionality by loading packages in the preamble:
+
+```latex
+\documentclass{article}
+
+% Common packages
+\usepackage{amsmath}     % Enhanced math features
+\usepackage{graphicx}    % Include images
+\usepackage{hyperref}    % Clickable links
+\usepackage{geometry}    % Page layout
+\usepackage{booktabs}    % Professional tables
+
+\begin{document}
+% Your content
+\end{document}
+```
+
+### Essential packages
+
+| Package | Purpose |
+|---------|--------|
+| `amsmath` | Advanced mathematical typesetting |
+| `amssymb` | Additional math symbols |
+| `graphicx` | Image inclusion |
+| `hyperref` | Hyperlinks and PDF features |
+| `geometry` | Page margins and layout |
+| `natbib` or `biblatex` | Bibliography management |
+
+## Comments
+
+Add comments that won't appear in the output:
+
+```latex
+% This is a comment
+This text will appear. % This comment won't
+
+% Comments are useful for:
+% - Explaining complex code
+% - Temporarily disabling content
+% - Leaving notes for collaborators
+```
+
+## Special characters
+
+Some characters have special meaning in LaTeX and need to be escaped:
+
+```latex
+% These need backslash to print literally:
+\$ \% \& \_ \{ \} \# \\
+
+% Quotes
+`single quotes'
+``double quotes''
+
+% Dashes
+- hyphen
+-- en-dash
+--- em-dash
+```
+
+## Bibliography
+
+Create references for academic documents:
+
+```latex
+\begin{document}
+
+According to Smith~\cite{smith2020}, this is true.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
+```
+
+<Note>
+  Bibliography management typically requires external `.bib` files. Check Typeset's documentation for multi-file project support.
+</Note>
+
+## Common mistakes to avoid
+
+<AccordionGroup>
+  <Accordion title="Forgetting to escape special characters">
+    Characters like `$`, `%`, `&`, `_`, `{`, `}` have special meaning. Use `\$`, `\%`, etc. to print them literally.
+  </Accordion>
+  
+  <Accordion title="Using $$ for display math">
+    While `$$...$$` works, it's deprecated. Use `\[...\]` or `\begin{equation}...\end{equation}` instead.
+  </Accordion>
+  
+  <Accordion title="Not compiling after changes">
+    LaTeX requires compilation to see changes. Click "Compile" in Typeset frequently to catch errors early.
+  </Accordion>
+  
+  <Accordion title="Missing braces in subscripts/superscripts">
+    Use `x^{10}` not `x^10` for multi-character exponents. Without braces, only the first character is superscripted.
+  </Accordion>
+</AccordionGroup>
+
+## Testing your LaTeX code
+
+In Typeset, you can test any LaTeX code immediately:
+
+<Steps>
+  <Step title="Write your LaTeX code">
+    Type or paste LaTeX code in the editor panel.
+  </Step>
+  
+  <Step title="Click Compile">
+    Click the "Compile" button (play icon) in the top navigation.
+  </Step>
+  
+  <Step title="View the result">
+    See the rendered PDF in the preview panel on the right.
+  </Step>
+  
+  <Step title="Fix any errors">
+    If compilation fails, error messages appear in the preview panel. Fix the errors and compile again.
+  </Step>
+</Steps>
+
+## Learning resources
+
+- **Overleaf Documentation**: Comprehensive LaTeX guides and examples
+- **LaTeX Wikibook**: Community-maintained LaTeX reference
+- **CTAN**: Comprehensive TeX Archive Network for packages
+- **Typeset AI**: Use the built-in chat to ask questions about LaTeX syntax
+
+<Tip>
+  Use Typeset's AI chat feature to get help with LaTeX syntax. Ask questions like "How do I create a matrix?" or "Show me how to make a numbered list."
+</Tip>
+
+## Related resources
+
+- [Creating projects](/guides/creating-projects) - Set up new LaTeX documents
+- [Troubleshooting](/guides/troubleshooting) - Fix LaTeX compilation errors
+- [Sharing projects](/guides/sharing-projects) - Collaborate on LaTeX documents

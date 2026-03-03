@@ -1,0 +1,141 @@
+---
+title: AI assistant
+description: Get intelligent help writing LaTeX with GPT and Gemini models
+---
+
+The AI assistant helps you write, edit, and improve your LaTeX documents. It understands LaTeX syntax, can suggest improvements, and makes direct edits to your document.
+
+## Available models
+
+Typeset offers two AI models:
+
+<Tabs>
+  <Tab title="GPT-4.1 mini">
+    OpenAI's GPT-4.1 mini model provides fast, accurate responses for LaTeX assistance. Best for:
+    - Quick formatting fixes
+    - Adding common LaTeX elements
+    - General LaTeX questions
+  </Tab>
+
+  <Tab title="Gemini 2.5 Flash">
+    Google's Gemini 2.5 Flash model offers powerful language understanding. Best for:
+    - Complex document restructuring
+    - Advanced LaTeX packages
+    - Detailed explanations
+  </Tab>
+</Tabs>
+
+<Note>
+You can switch between models at any time using the dropdown menu in the chat input area.
+</Note>
+
+## Chatting with the AI
+
+The AI assistant appears in the left panel of the interface.
+
+<Steps>
+  <Step title="Select a model">
+    Choose **GPT-4.1 mini** or **Gemini 2.5 Flash** from the dropdown menu at the bottom of the chat panel.
+  </Step>
+
+  <Step title="Type your message">
+    Enter your question or request in the text input. The AI has access to your current document, so you can refer to it directly.
+    
+    Examples:
+    - "Add the Transformer attention formula"
+    - "Improve formatting of my introduction"
+    - "How do I create a two-column layout?"
+  </Step>
+
+  <Step title="Send and wait">
+    Press `Enter` or click the send button. The AI will analyze your document and respond. You'll see a loading indicator while it thinks.
+  </Step>
+</Steps>
+
+## Quick suggestions
+
+When you first open the chat, you'll see suggested prompts to get started:
+
+- "Add Transformer attention formula"
+- "Improve formatting"
+- "Inspect for errors"
+- "How do I write an integral?"
+
+Click any suggestion to send it immediately.
+
+## Document edits
+
+When you ask the AI to make changes to your document, it uses the `editFile` tool:
+
+<Steps>
+  <Step title="AI proposes changes">
+    The AI analyzes your request and creates a modified version of your document. You'll see an "Editing file..." indicator in the chat.
+  </Step>
+
+  <Step title="Review in editor">
+    The editor switches to side-by-side comparison mode, showing your current version and the AI's suggested version.
+  </Step>
+
+  <Step title="Accept or reject">
+    Review the changes and click **Accept** to apply them or **Reject** to keep your original document.
+  </Step>
+</Steps>
+
+<Info>
+The AI always shows you a preview of changes before applying them. Your original document is never modified without your approval.
+</Info>
+
+## What the AI knows
+
+The AI assistant has access to:
+
+- **Your current document** - Automatically attached to every message as `main.tex`
+- **LaTeX knowledge** - Extensive understanding of LaTeX syntax, packages, and best practices
+- **Conversation history** - Previous messages in the current chat session
+
+<Note>
+The AI does **not** have access to other files in your project or previous chat sessions. Each chat starts fresh.
+</Note>
+
+## Best practices
+
+<Steps>
+  <Step title="Be specific">
+    Instead of "make it better", try "improve the introduction by adding a thesis statement and restructuring the paragraphs".
+  </Step>
+
+  <Step title="Ask questions first">
+    If you're unsure how to do something, ask "How do I..." before requesting changes. The AI can explain the approach.
+  </Step>
+
+  <Step title="Review carefully">
+    Always review AI suggestions before accepting. The AI is helpful but can make mistakes or misunderstand complex requests.
+  </Step>
+
+  <Step title="Iterate">
+    If the first result isn't perfect, provide feedback: "That's good, but can you also add a caption?" The AI remembers the conversation context.
+  </Step>
+</Steps>
+
+## Error handling
+
+If something goes wrong:
+
+- **Rate limit errors** - Wait a moment and try again. High demand can temporarily limit requests.
+- **Connection errors** - Check your internet connection and click **Retry**.
+- **Unexpected errors** - The chat shows an error alert with a **Retry** button to resend your last message.
+
+## Chat controls
+
+- **Stop generation** - Click the stop button (square icon) to cancel an ongoing AI response
+- **Scroll to bottom** - When new messages arrive, a down arrow appears to help you jump to the latest message
+- **Multi-line input** - Press `Shift + Enter` to add line breaks in your message without sending
+
+## Understanding AI responses
+
+AI messages support rich formatting:
+
+- **Markdown** - Bold, italic, lists, and headings
+- **Code blocks** - Syntax-highlighted LaTeX snippets
+- **Math expressions** - Inline (`$...$`) and block (`$$...$$`) equations
+- **Status alerts** - Special indicators when the AI is editing your file
